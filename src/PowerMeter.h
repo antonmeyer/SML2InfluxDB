@@ -8,7 +8,6 @@
 #include "unit.h"
 #include <string.h>
 
-
 #define BUF_SIZE 1024
 
 #define SMLFLAG 0x1b1b1b1b
@@ -16,27 +15,51 @@
 
 class MeterDataSet
 {
-public:
-    char vendor[3];
-    unsigned char serial[20]; //9 bytes HEX without space/blanks
-    String alias;            //like WPGH or HSVH - to save data and have meaningful identifiyer
-    double actW;              //actual Power in Watt
-    double sumWh;             //total Energy in Wh
 
-    void setSerial(unsigned char *ba, int len)
+public:
+    String alias;     //like WPGH or HSVH - to save data and have meaningful identifiyer
+    char meterid[30]; //vendor ID and 9 or 10 bytes HEX without space/blanks
+    double actW;      //actual Power in Watt
+    double sumWh;     //total Energy in Wh
+
+    //this table is used to MAP vendor and serial number to an alias GH = GarenHaus, VH = VorderHaus
+#define TBLENTRIES 6
+    const char *alias_lkup_tbl[TBLENTRIES][2] = {{"GHWP", "EMH0901454d4800006bd439"},
+                                                 {"GHHS", "ISK090149534b000421d3d9"},
+                                                 {"VHWP", "EMH0901454d4800006bd340"},
+                                                 {"VHHS", "ISK090149534b000421d3da"},
+                                                 {"TG", "ISK090149534b000421d3dc"},
+                                                 {"Loewe", "EMH01a815133577030102"}};
+
+    void setMeterIDserial(unsigned char *ba, int len)
     {
         const char hex_str[] = "0123456789abcdef";
-        int j = 0;
-        for (int i = 0; i < 10; i++)
+        //ToDo check the len here, limit to meterid array
+        int j = 3; //first 3 chars are the vendor
+        for (int i = 0; i < len; i++)
         {
-            if (i > len - 1)
-            {                       //very uggly hack to handle shorter arrays from the smal message
-                serial[j++] = 0x20; // 0x20 is a blank
-                serial[j++] = 0x20;
-            }
-            serial[j++] = hex_str[(ba[i] >> 4) & 0x0F];
-            serial[j++] = hex_str[ba[i] & 0x0F];
+            meterid[j++] = hex_str[(ba[i] >> 4) & 0x0F];
+            meterid[j++] = hex_str[ba[i] & 0x0F];
         }
+        meterid[j] = 0; //zero terminated string
+    };
+
+    const char *getalias()
+    {
+        //returns pointer to string alias, if no alias in lookup table found returns meterid
+        int i = 0;
+        while (!(strcmp(meterid, alias_lkup_tbl[i][1]) == 0))
+        {
+            if (++i == TBLENTRIES)
+                break;
+        }
+
+        if (i < TBLENTRIES)
+        {
+            return alias_lkup_tbl[i][0];
+        }
+        else
+            return meterid; //we did not found a alias
     };
 };
 
@@ -51,7 +74,7 @@ public:
         .stop_bits = UART_STOP_BITS_1,
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE};
 
-    MeterDataSet dataset1;
+    MeterDataSet dataset;
 
     uint8_t uartbuf[BUF_SIZE];
 
@@ -68,7 +91,7 @@ public:
         this->uart_num = uartnr;
         uart_param_config(uart_num, &conf_uart);
 
-   /*     if (uart_num == UART_NUM_0) {
+        /*     if (uart_num == UART_NUM_0) {
             //we hope we can use UART0 for Rx but keep Tx für debug output, or would that collide anyhow?
             uart_set_pin(UART_NUM_0, GPIO_NUM_1, rx_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         }
@@ -78,7 +101,7 @@ public:
         uart_set_pin(uart_num, UART_PIN_NO_CHANGE, rx_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         uart_driver_install(uart_num, BUF_SIZE, 0, 20, &queue_uart, 0);
         uart_enable_pattern_det_intr(uart_num, 0x1B, 4, 10000, 10, 10); // detect 4x 0x1B
-        uart_pattern_queue_reset(uart_num, 5); // keep 5 pattern positions in queue
+        uart_pattern_queue_reset(uart_num, 5);                          // keep 5 pattern positions in queue
     };
 
     char handle_event()
@@ -126,8 +149,7 @@ public:
                         //we could do some checks here, but is boring ..
 
                         //and now we can search for the values within uartbuf
-                        
-                    
+
                         uint32_t startCounter = ESP.getCycleCount();
                         //tricky skipp the start flag and the end flag and CRC
                         sml_file *file = sml_file_parse(uartbuf + 8, len - 8);
@@ -143,7 +165,7 @@ public:
                     //else we just wait for the next pattern event
                     //could be better to flush here to get back in sync?
                     //we might loss the first messages, but it should get in sync as between the messages are several seconds pause
-                    //else uart_flush(uart_num); //does not work, makes thinks worse 
+                    //else uart_flush(uart_num); //does not work, makes thinks worse
                 }
 
                 break;
@@ -151,7 +173,7 @@ public:
                 Serial.println(event.type, HEX);
             }
         }
-    return result;
+        return result;
     };
 
     void DEBUG_SML_FILE(sml_file *file)
@@ -248,16 +270,16 @@ public:
 
                     if (memcmp(entry->obj_name->str, objID_vendor, 6) == 0)
                     {
-                        //we have the vendor, should be an octet String of lenght 3
-                        strncpy(dataset1.vendor, (const char *)(entry->value->data.bytes->str), 3);
-                        printf("vendor: %.3s\n", dataset1.vendor);
+                        //we have the vendor, should be an octet String of lenght 3, -> 3 first char in meterid
+                        strncpy(dataset.meterid, (const char *)(entry->value->data.bytes->str), 3);
+                        printf("vendor: %.3s\n", dataset.meterid);
                     }
                     else if (memcmp(entry->obj_name->str, objID_serial, 6) == 0)
                     {
                         //we have the serial, should be an octed string of 10 , might vary
-                        //strncpy(dataset1.serial, (const char *)(entry->value->data.bytes->str), 10);
-                        dataset1.setSerial(entry->value->data.bytes->str, entry->value->data.bytes->len);
-                        printf("serial: %.20s\n", dataset1.serial);
+                        //strncpy(dataset.serial, (const char *)(entry->value->data.bytes->str), 10);
+                        dataset.setMeterIDserial(entry->value->data.bytes->str, entry->value->data.bytes->len);
+                        printf("serial: %s\n", dataset.meterid + 3); //first 3 char are verndor ID
                     }
                     else if (memcmp(entry->obj_name->str, objID_actW, 6) == 0)
                     {
@@ -269,8 +291,8 @@ public:
                         int prec = -scaler;
                         if (prec < 0)
                             prec = 0;
-                        dataset1.actW = value * pow(10, scaler);
-                        printf("actW = %.*f\n", prec, dataset1.actW);
+                        dataset.actW = value * pow(10, scaler);
+                        printf("actW = %.*f\n", prec, dataset.actW);
                         //ToDo do we want to deal with prec?
                     }
                     else if (memcmp(entry->obj_name->str, objID_sumWh, 6) == 0)
@@ -283,14 +305,18 @@ public:
                         int prec = -scaler;
                         if (prec < 0)
                             prec = 0;
-                        dataset1.sumWh = value * pow(10, scaler);
-                        printf("actW = %.*f\n", prec, dataset1.sumWh);
+                        dataset.sumWh = value * pow(10, scaler);
+                        printf("actW = %.*f\n", prec, dataset.sumWh);
                         //ToDo do we want to deal with prec?
                     }
                 }
             }
         }
         printf("minHeap: %d, maxSeg: %d\n", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
+        printf("meterid: %s\n", dataset.meterid);
+
+        printf("alias: %s\n", dataset.getalias());
+
     }; // filter Value
 };     // end of class PowerMeter
 
