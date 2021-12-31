@@ -5,9 +5,11 @@
 //#include <sml/sml_file.h>
 #include "PowerMeter.h"
 //#include "EEPROM.h"
-#include <WiFi.h>
+//#include <WiFi.h>
 #include "myInfluxdb.h"
 
+#include <IotWebConf.h>
+#include "IoTconf.h"
 
 PowerMeter pm2(UART_NUM_2, GPIO_NUM_16);  // UART_PIN_NO_CHANGE keep the defaults does not work
 PowerMeter pm1(UART_NUM_1, GPIO_NUM_36);    //default UART2 = GPIO_NUM_16
@@ -17,9 +19,17 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("hallo sml reader here");
-  pm1.dataset.alias = "VHWP";
-  pm2.dataset.alias = "VHHS";
+  Serial.println("trying to get OnLine");
+ 
+  IoTconf_init(); // we hide som stuff in this include file
 
+//as long we are not online, it does not make sense to proceed
+  while (iotWebConf.getState() != iotwebconf::OnLine) {
+    iotWebConf.doLoop();
+    //debug output?
+  }
+
+/*
   Serial.print("Connecting to WiFi: ");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
@@ -29,12 +39,18 @@ void setup() {
 
   Serial.println("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
-
+*/
   influxdb_init();
+  pm1.dataset.alias = "VHWP";
+  pm2.dataset.alias = "VHHS";
+  
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+// -- doLoop should be called as frequently as possible.
+  iotWebConf.doLoop();
 
   if (pm2.handle_event() ) {
     send2InfluxDb(pm2.dataset);

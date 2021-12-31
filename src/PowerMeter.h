@@ -169,6 +169,13 @@ public:
                 }
 
                 break;
+                
+            case UART_FIFO_OVF:
+            case UART_BUFFER_FULL:
+                uart_flush_input(uart_num);
+                xQueueReset(queue_uart);
+                break;
+
             default:
                 Serial.println(event.type, HEX);
             }
