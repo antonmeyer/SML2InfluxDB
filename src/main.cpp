@@ -9,7 +9,10 @@
 #include "myInfluxdb.h"
 
 #include <IotWebConf.h>
-#include "IoTconf.h"
+#include "myWebConf.h"
+
+#include <ArduinoOTA.h>
+#include "myOTA.h"
 
 PowerMeter pm2(UART_NUM_2, GPIO_NUM_16);  // UART_PIN_NO_CHANGE keep the defaults does not work
 PowerMeter pm1(UART_NUM_1, GPIO_NUM_36);    //default UART2 = GPIO_NUM_16
@@ -43,6 +46,8 @@ void setup() {
   influxdb_init();
   pm1.dataset.alias = "VHWP";
   pm2.dataset.alias = "VHHS";
+
+  myOTA_init();
   
 }
 
@@ -51,6 +56,7 @@ void loop() {
 
 // -- doLoop should be called as frequently as possible.
   iotWebConf.doLoop();
+  ArduinoOTA.handle();
 
   if (pm2.handle_event() ) {
     send2InfluxDb(pm2.dataset);
