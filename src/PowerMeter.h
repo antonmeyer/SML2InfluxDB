@@ -111,21 +111,21 @@ public:
 
         if (xQueueReceive(queue_uart, (void *)&event, (TickType_t)0))
         {
-            printf("UART: %d\n", uart_num);
-            Serial.print("we got an event: ");
+           // printf("UART: %d\n", uart_num);
+           // Serial.print("we got an event: ");
 
             switch (event.type)
             {
 
             case UART_PATTERN_DET:
-                Serial.println(event.type, HEX);
-                Serial.print("pattern found, pos: ");
+            //    Serial.println(event.type, HEX);
+            //    Serial.print("pattern found, pos: ");
 
                 pos = uart_pattern_pop_pos(uart_num);
-                Serial.print(pos);
+             //   Serial.print(pos);
                 uart_get_buffered_data_len(uart_num, (size_t *)&length);
-                Serial.print(" / ");
-                Serial.println(length);
+            //    Serial.print(" / ");
+            //    Serial.println(length);
                 if (pos > 0)
                 { //the assumption: first pattern is at position 0x0;
                     // so if we are here, we should have the 2nd at the end of the message
@@ -141,7 +141,7 @@ public:
 
                     if ((smlarray[0] == SMLFLAG) && (smlarray[1] == SMLSTART))
                     {
-                        Serial.println("StartFlag found");
+                      //  Serial.println("StartFlag found");
                         //read the endflag and crc- it should be here, as we got the event and the pos
 
                         uart_read_bytes(uart_num, &uartbuf[len], 8, 20 / portTICK_RATE_MS);
@@ -153,7 +153,7 @@ public:
                         uint32_t startCounter = ESP.getCycleCount();
                         //tricky skipp the start flag and the end flag and CRC
                         sml_file *file = sml_file_parse(uartbuf + 8, len - 8);
-                        printf("sml_parse cpu-cycles: %d\n", (ESP.getCycleCount() - startCounter));
+                     //   printf("sml_parse cpu-cycles: %d\n", (ESP.getCycleCount() - startCounter));
 
                         // DEBUG_SML_FILE(file);
                         filterValues(file);
@@ -176,8 +176,8 @@ public:
                 xQueueReset(queue_uart);
                 break;
 
-            default:
-                Serial.println(event.type, HEX);
+            //default:
+                //Serial.println(event.type, HEX);
             }
         }
         return result;
@@ -279,14 +279,14 @@ public:
                     {
                         //we have the vendor, should be an octet String of lenght 3, -> 3 first char in meterid
                         strncpy(dataset.meterid, (const char *)(entry->value->data.bytes->str), 3);
-                        printf("vendor: %.3s\n", dataset.meterid);
+                        //printf("vendor: %.3s\n", dataset.meterid);
                     }
                     else if (memcmp(entry->obj_name->str, objID_serial, 6) == 0)
                     {
                         //we have the serial, should be an octed string of 10 , might vary
                         //strncpy(dataset.serial, (const char *)(entry->value->data.bytes->str), 10);
                         dataset.setMeterIDserial(entry->value->data.bytes->str, entry->value->data.bytes->len);
-                        printf("serial: %s\n", dataset.meterid + 3); //first 3 char are verndor ID
+                       // printf("serial: %s\n", dataset.meterid + 3); //first 3 char are verndor ID
                     }
                     else if (memcmp(entry->obj_name->str, objID_actW, 6) == 0)
                     {
@@ -299,7 +299,7 @@ public:
                         if (prec < 0)
                             prec = 0;
                         dataset.actW = value * pow(10, scaler);
-                        printf("actW = %.*f\n", prec, dataset.actW);
+                       // printf("actW = %.*f\n", prec, dataset.actW);
                         //ToDo do we want to deal with prec?
                     }
                     else if (memcmp(entry->obj_name->str, objID_sumWh, 6) == 0)
@@ -313,16 +313,16 @@ public:
                         if (prec < 0)
                             prec = 0;
                         dataset.sumWh = value * pow(10, scaler);
-                        printf("actW = %.*f\n", prec, dataset.sumWh);
+                      //  printf("actW = %.*f\n", prec, dataset.sumWh);
                         //ToDo do we want to deal with prec?
                     }
                 }
             }
         }
-        printf("minHeap: %d, maxSeg: %d\n", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
-        printf("meterid: %s\n", dataset.meterid);
+       // printf("minHeap: %d, maxSeg: %d\n", ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
+       // printf("meterid: %s\n", dataset.meterid);
 
-        printf("alias: %s\n", dataset.getalias());
+       // printf("alias: %s\n", dataset.getalias());
 
     }; // filter Value
 };     // end of class PowerMeter

@@ -14,10 +14,7 @@
 //#define INFLUXDB_BUCKET "bucket1"
 
 // Set timezone string according to https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
-// Examples:
-//  Pacific Time: "PST8PDT"
-//  Eastern: "EST5EDT"
-//  Japanesse: "JST-9"
+
 //  Central Europe: "CET-1CEST,M3.5.0,M10.5.0/3"
 #define TZ_INFO "CET-1CEST,M3.5.0,M10.5.0/3"
 //#define TZ_INFO "PST8PDT"
@@ -34,8 +31,9 @@ Point WLANP1("ESP32");
 
 void influxdb_init()
 {
-
+  // /***** time sync already done by IOTAppStory *****
     timeSync(TZ_INFO, "pool.ntp.org", "time.nis.gov");
+ // */
 
     // Check server connection
     if (client.validateConnection())
@@ -49,7 +47,7 @@ void influxdb_init()
         Serial.println(client.getLastErrorMessage());
     }
 
-    WLANP1.addTag("device", "Doitv1ESP32");
+    WLANP1.addTag("device", "eMonVH");
     WriteOptions wo;
     wo.batchSize(10);
     wo.bufferSize(20);
@@ -63,7 +61,7 @@ void send2InfluxDb(MeterDataSet dataset)
     //time_t tnow = time(nullptr);
     // Point eMP1("ePower");
     eMP1.setTime(WritePrecision::S); //set the current time
-    eMP1.addTag("eMeter", dataset.alias);
+    eMP1.addTag("eMeter", dataset.getalias());
     eMP1.addField("actW", dataset.actW);
     eMP1.addField("sumWh", dataset.sumWh);
 
@@ -88,6 +86,10 @@ void sendESP32_to_Influxdb()
     WLANP1.setTime(WritePrecision::S);
     WLANP1.addField("rssi", WiFi.RSSI());
     WLANP1.addField("heap", ESP.getMinFreeHeap());
+
+    // Print what are we exactly writing
+    Serial.print("Writing: ");
+    Serial.println(client.pointToLineProtocol(WLANP1));
 
     if (!client.writePoint(WLANP1))
     {
