@@ -4,7 +4,7 @@
 #define INFLUXDB_CLIENT_DEBUG_ENABLE
 #include "util/debug.h"
 
-#include "credentials.h"
+#include "mycredentials.h"
 
 #include <InfluxDbClient.h>
 #include <InfluxDbCloud.h>
