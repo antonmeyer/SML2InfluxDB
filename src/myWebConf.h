@@ -33,7 +33,7 @@
 
 #include <IotWebConf.h>
 #include <IotWebConfMultipleWifi.h>
-#include "credentials.h"
+#include "mycredentials.h"
 
 // -- Initial name of the Thing. Used e.g. as SSID of the own Access Point.
 const char thingName[] = "esp32VH";
@@ -68,8 +68,7 @@ IotWebConf iotWebConf(thingName, &dnsServer, &server, wifiInitialApPassword, CON
 
 iotwebconf::ChainedWifiParameterGroup chainedWifiParameterGroups[] = {
   iotwebconf::ChainedWifiParameterGroup("wifi1"),
-  iotwebconf::ChainedWifiParameterGroup("wifi2"),
-  iotwebconf::ChainedWifiParameterGroup("wifi3")
+  iotwebconf::ChainedWifiParameterGroup("wifi2")
 };
 
 iotwebconf::MultipleWifiAddition multipleWifiAddition(

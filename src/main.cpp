@@ -11,7 +11,6 @@
 #include <IotWebConf.h>
 #include "myWebConf.h"
 
-#include <ArduinoOTA.h>
 #include "myOTA.h"
 
 PowerMeter pm2(UART_NUM_2, GPIO_NUM_16);  // UART_PIN_NO_CHANGE keep the defaults does not work
@@ -47,8 +46,6 @@ void setup() {
   pm1.dataset.alias = "VHWP";
   pm2.dataset.alias = "VHHS";
 
-  myOTA_init();
-  
 }
 
 void loop() {
@@ -56,8 +53,8 @@ void loop() {
 
 // -- doLoop should be called as frequently as possible.
   iotWebConf.doLoop();
-  ArduinoOTA.handle();
-
+  checkUpdate (3600000); // check periode in ms
+  
   if (pm2.handle_event() ) {
     send2InfluxDb(pm2.dataset);
   };
@@ -66,7 +63,7 @@ void loop() {
     send2InfluxDb(pm1.dataset);
   };
   
-  if ((millis()- lastsend) > 300000){ //every 5 min
+  if ((millis()- lastsend) > 30000){ //every 5 min
     lastsend = millis();
     sendESP32_to_Influxdb();
   }

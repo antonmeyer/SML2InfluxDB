@@ -7,3 +7,4 @@
 .vscode/dryrun.log
 .vscode/configurationCache.log
 src/credentials.h
+src/mycredentials.h
