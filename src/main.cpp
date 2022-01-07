@@ -23,7 +23,10 @@ void setup() {
   Serial.println("hallo sml reader here");
   Serial.println("trying to get OnLine");
  
-  IoTconf_init(); // we hide som stuff in this include file
+  IoTconf_init(); // we hide some stuff in this include file
+  //now we wait for the connection to avoid chaos for the send functions
+  while (iotWebConf.getState() != iotwebconf::OnLine) {
+    iotWebConf.doLoop(); }
 
 //as long we are not online, it does not make sense to proceed
   while (iotWebConf.getState() != iotwebconf::OnLine) {
@@ -53,7 +56,7 @@ void loop() {
 
 // -- doLoop should be called as frequently as possible.
   iotWebConf.doLoop();
-  checkUpdate (3600000); // check periode in ms
+  checkUpdate (360000); // check periode in ms
   
   if (pm2.handle_event() ) {
     send2InfluxDb(pm2.dataset);
@@ -63,7 +66,7 @@ void loop() {
     send2InfluxDb(pm1.dataset);
   };
   
-  if ((millis()- lastsend) > 30000){ //every 5 min
+  if ((millis()- lastsend) > 300000){ //every 5 min
     lastsend = millis();
     sendESP32_to_Influxdb();
   }

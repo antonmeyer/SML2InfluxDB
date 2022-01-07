@@ -19,8 +19,10 @@ class MeterDataSet
 public:
     String alias;     //like WPGH or HSVH - to save data and have meaningful identifiyer
     char meterid[30]; //vendor ID and 9 or 10 bytes HEX without space/blanks
-    double actW;      //actual Power in Watt
-    double sumWh;     //total Energy in Wh
+    double actW =0;      //actual Power in Watt - ToDo what happend if that is not send by the meter?
+    double sumWh =0;     //total Energy in Wh
+    //we should add here the timestamp
+    //ToDo improvement: send only values if they have changed or time intervall has reached
 
     //this table is used to MAP vendor and serial number to an alias GH = GarenHaus, VH = VorderHaus
 #define TBLENTRIES 6
