@@ -2,7 +2,7 @@
 #include <HTTPUpdate.h>
 #include "mycredentials.h"
 
-#define Version "1.0.0.5"
+#define Version "1.0.0.7"
 #define MakeFirmwareInfo(k, v) "&_FirmwareInfo&k=" k "&v=" v "&FirmwareInfo_&"
 
 const char otadrv_ca[] =
