@@ -14,7 +14,7 @@
 #include "myOTA.h"
 
 PowerMeter pm2(UART_NUM_2, GPIO_NUM_16);  // UART_PIN_NO_CHANGE keep the defaults does not work
-PowerMeter pm1(UART_NUM_1, GPIO_NUM_36);    //default UART2 = GPIO_NUM_16
+PowerMeter pm1(UART_NUM_1, GPIO_NUM_32);    //default UART2 = GPIO_NUM_16
 
 unsigned long lastsend;
 void setup() {
