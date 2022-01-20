@@ -82,7 +82,6 @@ void send2InfluxDb(MeterDataSet dataset)
 
 void sendESP32_to_Influxdb()
 {
-
     WLANP1.setTime(WritePrecision::S);
     WLANP1.addField("rssi", WiFi.RSSI());
     WLANP1.addField("heap", ESP.getMinFreeHeap());
