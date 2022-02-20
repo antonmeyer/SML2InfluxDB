@@ -63,7 +63,14 @@ public:
         else
             return meterid; //we did not found a alias
     };
-};
+
+    void print() {
+        Serial.print("actW: ");
+        Serial.println(actW);
+
+        //printf("meterid: %s, actW: %lf, sumWh: %lf", meterid, actW, sumWh);
+    }
+}; //end of class MeterDataSet
 
 class PowerMeter
 {
@@ -327,6 +334,17 @@ public:
        // printf("alias: %s\n", dataset.getalias());
 
     }; // filter Value
+
+    void filtertest (unsigned char * testSMLbin, uint32_t len) {
+
+        sml_file *file = sml_file_parse(testSMLbin, len);
+        DEBUG_SML_FILE(file);
+        filterValues(file);
+        sml_file_free(file);
+        dataset.print();
+
+
+    }
 };     // end of class PowerMeter
 
 #endif

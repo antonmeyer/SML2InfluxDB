@@ -23,37 +23,28 @@ void setup() {
   Serial.println("hallo sml reader here");
   Serial.println("trying to get OnLine");
  
+ 
   IoTconf_init(); // we hide some stuff in this include file
   //now we wait for the connection to avoid chaos for the send functions
   while (iotWebConf.getState() != iotwebconf::OnLine) {
     iotWebConf.doLoop(); }
 
-//as long we are not online, it does not make sense to proceed
-  while (iotWebConf.getState() != iotwebconf::OnLine) {
-    iotWebConf.doLoop();
-    //debug output?
-  }
-
-/*
-  Serial.print("Connecting to WiFi: ");
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500); Serial.print(":-(");
-  }
-
-  Serial.println("WiFi connected with IP: ");
-  Serial.println(WiFi.localIP());
-*/
   influxdb_init();
+  
   pm1.dataset.alias = "VHWP";
   pm2.dataset.alias = "VHHS";
 
+/* sml message debug
+#include "testdata.h"
+ printf("sizeof: %d\n", sizeof(isk1msgfull));
+  pm1.filtertest(isk1msgfull, sizeof(isk1msgfull));
+
+  Serial.println("hinterm filtertest kommt nichts mehr");
+*/
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  
 // -- doLoop should be called as frequently as possible.
   iotWebConf.doLoop();
   checkUpdate (360000); // check periode in ms
