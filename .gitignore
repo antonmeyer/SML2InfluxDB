@@ -9,3 +9,6 @@
 src/credentials.h
 src/WifiManager_cred.h
 src/mycredentials.h
+.vscode/extensions.json
+.gitignore
+.vscode/extensions.json
