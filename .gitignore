@@ -7,8 +7,12 @@
 .vscode/dryrun.log
 .vscode/configurationCache.log
 src/credentials.h
+<<<<<<< HEAD
 src/WifiManager_cred.h
 src/mycredentials.h
 .vscode/extensions.json
 .gitignore
 .vscode/extensions.json
+=======
+src/mycredentials.h
+>>>>>>> OTA
