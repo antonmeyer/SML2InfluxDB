@@ -2,7 +2,11 @@
 uses a ESP32
 reads SML messages from a power meter via optical reader to Serial line
 uses UART of ESP32
-filters actual Power and overall power
-end send it to a inlfuxDB
+
+Decodes SML Messages and filters
+actual power and overall power
+and send it to a influxDB
 
 WLAN init is done with IotWebConf
+
+
