@@ -36,7 +36,10 @@
 #include "mycredentials.h"
 
 // -- Initial name of the Thing. Used e.g. as SSID of the own Access Point.
-const char thingName[] = "eMonVH";
+const char thingName[] = "esp32VH";
+// ACHTUNG könnte live derzeit "eMonVH" sein vermutlich aber nicht
+//bei einem remote update könnte das zum Problem werden, weil das WLAN neu initialisiert werden muss
+// kann man schlecht testen
 
 #define STRING_LEN 128
 #define NUMBER_LEN 32
