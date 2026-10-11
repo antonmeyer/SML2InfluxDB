@@ -4,21 +4,10 @@
 #include <HTTPUpdate.h>
 #include <esp_task_wdt.h>
 #include <WiFiClientSecure.h>
+#include "config.h"        // Version, OTA_CHECK_INTERVAL_MS
 #include "mycredentials.h" // OTAKEY
 
-// Firmware version, as uploaded to OTAdrive. OTAdrive compares it with the version of the newest upload.
-#ifndef Version // can be overridden at build time: -DVersion=\"1.1.0.1\"
-#define Version "1.2.0.0"
-#endif
 #define MakeFirmwareInfo(k, v) "&_FirmwareInfo&k=" k "&v=" v "&FirmwareInfo_&"
-
-// How often to ask OTAdrive. The server blocks devices that ask too often (quota), so keep this low.
-// 0 switches OTA off. The first check is done OTA_FIRST_CHECK_MS after boot (WLAN and NTP time are needed
-// for the certificate check), so every reboot also gives a chance to get an update.
-#ifndef OTA_CHECK_INTERVAL_MS
-#define OTA_CHECK_INTERVAL_MS (6UL * 60UL * 60UL * 1000UL) // 6 h
-#endif
-#define OTA_FIRST_CHECK_MS 60000UL
 
 // Root certificate of otadrive.com: "Certum Trusted Network CA" (self signed, valid until 2029-12-31).
 // The chain sent by the server is leaf -> Certum DV TLS G2 R39 CA -> Certum Trusted Root CA -> this one.

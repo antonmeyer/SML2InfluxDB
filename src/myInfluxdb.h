@@ -1,47 +1,21 @@
 #ifndef _myinfluxdb
 #define _myinfluxdb
 
-//#define INFLUXDB_CLIENT_DEBUG_ENABLE
-//#include "util/debug.h"
+// Writes the meter values and the status of the ESP32 to InfluxDB (line protocol over HTTPS), see config.h for
+// the measurement names and INFLUX_DRY_RUN. Header only, included once from main.cpp.
 
-#include "mycredentials.h"
+#include "config.h"
+#include "mycredentials.h" // INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_TOKEN
 
 #include <InfluxDbClient.h>
 #include <InfluxDbCloud.h>
-#include "PowerMeter.h" //we need the dataset structure
-
-#define INFLUXDB_BUCKET "testbkt1221"
-//#define INFLUXDB_BUCKET "bucket1"
-
-// Set timezone string according to https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
-
-//  Central Europe: "CET-1CEST,M3.5.0,M10.5.0/3"
-#define TZ_INFO "CET-1CEST,M3.5.0,M10.5.0/3"
-//#define TZ_INFO "PST8PDT"
+#include "MeterData.h" // the dataset structure
 
 // InfluxDB client instance with preconfigured InfluxCloud certificate
-InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
+static InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
 
-//InfluxDBClient client2(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
-
-//InfluxDBClient client3(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
-
-// Measurement names. For tests use a separate measurement (default "ePower_test"), so that the data can be
-// deleted afterwards without touching the real data. Set INFLUX_MEASUREMENT / INFLUX_MEASUREMENT_ESP in platformio.ini.
-#ifndef INFLUX_MEASUREMENT
-#define INFLUX_MEASUREMENT "ePower_test"
-#endif
-#ifndef INFLUX_MEASUREMENT_ESP
-#define INFLUX_MEASUREMENT_ESP "ESP32_test"
-#endif
-
-// INFLUX_DRY_RUN=1: build and print the line protocol, but do not send anything to the database.
-#ifndef INFLUX_DRY_RUN
-#define INFLUX_DRY_RUN 1
-#endif
-
-Point eMP1(INFLUX_MEASUREMENT);
-Point WLANP1(INFLUX_MEASUREMENT_ESP);
+static Point eMP1(INFLUX_MEASUREMENT);        // one point per meter frame
+static Point WLANP1(INFLUX_MEASUREMENT_ESP);  // status of the ESP32
 
 // Write problems are counted and reported with the ESP32 status point, so they are visible in the database
 // without a serial console. A rejected batch (e.g. HTTP 400, invalid line protocol) is dropped by the library.
@@ -94,11 +68,11 @@ bool influxdb_init()
     Serial.println("InfluxDB dry run: nothing is sent");
 #endif
 
-    WLANP1.addTag("device", "eMonVH");
+    WLANP1.addTag("device", DEVICE_NAME);
     WriteOptions wo;
-    wo.batchSize(10);
-    wo.bufferSize(20);
-    wo.flushInterval(300);
+    wo.batchSize(INFLUX_BATCH_SIZE);
+    wo.bufferSize(INFLUX_BUFFER_SIZE);
+    wo.flushInterval(INFLUX_FLUSH_INTERVAL_S);
     wo.writePrecision(WritePrecision::S);
     client.setWriteOptions(wo);
     return true;

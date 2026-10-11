@@ -1,21 +1,44 @@
 #ifndef POWERMETER
 #define POWERMETER
 
-#include "driver/uart.h"
-#include "endian.h"
-#include <sml/sml_file.h>
-#include <sml/sml_value.h>
-#include "MeterData.h" // MeterDataSet and the SML decoder
-#include "unit.h"
-#include <string.h>
+// Receives SML frames from a power meter on one UART of the ESP32.
+//
+// The UART hardware searches the stream for the 4 x 0x1B of the SML start and end flag and tells us the position.
+// handle_event() then reads the frame from the ring buffer, MeterData.h checks it (flags, CRC) and decodes it.
+// So the main loop only has to call handle_event() now and then, nothing is polled byte by byte.
+//
+// Frame:  1b1b1b1b 01010101 | SML messages + padding | 1b1b1b1b 1a <padding count> <crc16>
+// Tested on the host (test/test_decoder) and with a loopback test on the ESP32 (tools/selftest).
 
-#define BUF_SIZE 1024 // longest frame we accept (without start/end flag)
+#include "driver/uart.h"
+#include <string.h>
+#include "MeterData.h" // MeterDataSet and the SML decoder
+
+// Longest frame we accept, without the 8 byte end part. The frames of the meters have 300..1000 bytes.
+#define BUF_SIZE 1024
 
 // loop() is blocked now and then for seconds (HTTPS write, OTA check). So long the UART must keep the data:
-// a 9600 baud stream is ~1 KB/s, the frames of the meters are 300..1000 bytes.
-#define UART_RX_RING_SIZE 4096 // driver ring buffer, ~4 s
-#define UART_EVENT_QUEUE_LEN 256 // with the 8 byte FIFO threshold every frame makes ~40 data events
+// a 9600 baud stream is ~1 KB/s.
+#define UART_RX_RING_SIZE 4096    // driver ring buffer, ~4 s
+#define UART_EVENT_QUEUE_LEN 256  // with the 8 byte FIFO threshold every frame makes ~40 data events
 #define UART_PATTERN_QUEUE_LEN 20 // positions of start/end flags, 2 per frame
+
+// An SML frame is a continuous stream without pauses. With the default threshold (120 bytes) the UART hands the
+// data over to the ring buffer in big chunks, so the 4 bytes after a pattern would not be there yet when
+// handle_event() reads them. Hand them over every 8 bytes instead.
+#define UART_RX_FIFO_THRESHOLD 8
+
+// Pattern detection: 4 x 0x1B. The values are the ones of the deprecated API uart_enable_pattern_det_intr(), which
+// works with the meters since 2021. The unit of the three numbers (APB cycles or baud clocks) was not verified, so
+// they were left as they are.
+#define PATTERN_CHAR 0x1B
+#define PATTERN_CHAR_NUM 4
+#define PATTERN_CHR_TIMEOUT 10000
+#define PATTERN_POST_IDLE 10
+#define PATTERN_PRE_IDLE 10
+
+// Wait for the rest of a frame; it follows without a pause, the UART hands the bytes over every 8 bytes.
+#define READ_TIMEOUT_MS 50
 
 // -DSML_TRACE=1 prints every pattern event, for debugging the receive path (see tools/selftest)
 #if SML_TRACE
@@ -26,50 +49,31 @@
 
 class PowerMeter
 {
-
 public:
-    uart_config_t conf_uart = {
-        .baud_rate = 9600,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE};
-
+    // result of the last frame, valid after handle_event() returned 1
     MeterDataSet dataset;
+    SmlFrameStatus lastStatus = SML_FRAME_OK; // for diagnostics, also of rejected frames
 
-    uint8_t uartbuf[BUF_SIZE + 8]; // frame up to the end pattern + end flag, padding count and CRC
-
-    uart_port_t uart_num;
-    QueueHandle_t queue_uart;
-
-    int length = 0;
-    int pos = 0;
-    int len = 0;
-    bool startTaken = false; // a start flag was read from the line already and is in uartbuf[0..7]
-    SmlFrameStatus lastStatus = SML_FRAME_OK; // result of the last decoded frame, for diagnostics
-
-    PowerMeter(uart_port_t uartnr, int rx_pin)
+    // uartnr: UART of the ESP32, rx_pin: GPIO of the optical reader. Tx is not used. 9600 8N1 as all SML meters.
+    PowerMeter(uart_port_t uartnr, int rx_pin) : uart_num(uartnr)
     {
-        this->uart_num = uartnr;
+        uart_config_t conf_uart = {
+            .baud_rate = 9600,
+            .data_bits = UART_DATA_8_BITS,
+            .parity = UART_PARITY_DISABLE,
+            .stop_bits = UART_STOP_BITS_1,
+            .flow_ctrl = UART_HW_FLOWCTRL_DISABLE};
         uart_param_config(uart_num, &conf_uart);
-
-        /*     if (uart_num == UART_NUM_0) {
-            //we hope we can use UART0 for Rx but keep Tx für debug output, or would that collide anyhow?
-            uart_set_pin(UART_NUM_0, GPIO_NUM_1, rx_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-        }
-        else {
-        uart_set_pin(uart_num, UART_PIN_NO_CHANGE, rx_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);};
-    */
         uart_set_pin(uart_num, UART_PIN_NO_CHANGE, rx_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         uart_driver_install(uart_num, UART_RX_RING_SIZE, 0, UART_EVENT_QUEUE_LEN, &queue_uart, 0);
-        // An SML frame is a continuous stream without pauses. With the default threshold (120 bytes) the UART hands
-        // the data over to the ring buffer in big chunks, so the 4 bytes after a pattern would not be there when
-        // handle_event() reads them. Hand them over every 8 bytes instead.
-        uart_set_rx_full_threshold(uart_num, 8);
-        uart_enable_pattern_det_intr(uart_num, 0x1B, 4, 10000, 10, 10); // detect 4x 0x1B
+        uart_set_rx_full_threshold(uart_num, UART_RX_FIFO_THRESHOLD);
+        uart_enable_pattern_det_intr(uart_num, PATTERN_CHAR, PATTERN_CHAR_NUM, PATTERN_CHR_TIMEOUT, PATTERN_POST_IDLE,
+                                     PATTERN_PRE_IDLE);
         uart_pattern_queue_reset(uart_num, UART_PATTERN_QUEUE_LEN);
-    };
+    }
 
+    // Works off the UART events. Returns 1 if a valid frame with values was decoded, they are in dataset. Call it
+    // as often as possible, a blocked loop() is tolerated for a few seconds (the data waits in the ring buffer).
     char handle_event()
     {
         char result = 0;
@@ -79,148 +83,85 @@ public:
         // (after a blocked loop() there might be a lot of events waiting)
         while (!result && xQueueReceive(queue_uart, (void *)&event, (TickType_t)0))
         {
-           // printf("UART: %d\n", uart_num);
-           // Serial.print("we got an event: ");
-
             switch (event.type)
             {
-
             case UART_PATTERN_DET:
-            //    Serial.println(event.type, HEX);
-            //    Serial.print("pattern found, pos: ");
-
-                pos = uart_pattern_pop_pos(uart_num);
-                TRACE("[ev pos=%d startTaken=%d]", pos, startTaken);
-             //   Serial.print(pos);
-                uart_get_buffered_data_len(uart_num, (size_t *)&length);
-            //    Serial.print(" / ");
-            //    Serial.println(length);
-                if (pos == 0)
-                {
-                    // start flag at the head of the buffer, the frame is coming. A start flag we took from
-                    // the line earlier (startTaken) is outdated now, this one wins.
-                    startTaken = false;
-                }
-                else if (pos > 0)
-                {
-                    // The pattern is at pos > 0: normally the end flag of a frame whose start flag is still in
-                    // the buffer. But it can also be the start flag of the next frame, if there was junk or
-                    // a fragment in front of it (noise, a frame cut off, power up in the middle of a frame).
-                    // That is detected below and the start flag is kept for the next event.
-                    size_t off = startTaken ? 8 : 0; // start flag already in uartbuf[0..7]
-                    startTaken = false;
-                    if (pos > BUF_SIZE - (int)off)
-                    {
-                        // can not be a valid frame, drop everything and wait for the next start flag
-                        uart_flush_input(uart_num);
-                        break;
-                    }
-                    len = uart_read_bytes(uart_num, uartbuf + off, pos, 50 / portTICK_RATE_MS);
-                    if (len < 0)
-                        len = 0;
-                    len += off;
-                    TRACE("[read len=%d]", len);
-
-                    // 8 bytes more: end flag, padding count and CRC - or the start flag, see above
-                    int tail = uart_read_bytes(uart_num, &uartbuf[len], 8, 50 / portTICK_RATE_MS);
-
-                    TRACE("[tail=%d first=%02x%02x]", tail, uartbuf[len], uartbuf[len + 1]);
-                    static const uint8_t startFlag[8] = {0x1b, 0x1b, 0x1b, 0x1b, 0x01, 0x01, 0x01, 0x01};
-                    if (tail == 8 && memcmp(&uartbuf[len], startFlag, 8) == 0)
-                    {
-                        // what we read before was junk: forget it, the frame body follows
-                        memcpy(uartbuf, startFlag, 8);
-                        startTaken = true;
-                    }
-                    else if (tail == 8)
-                    {
-                        // checks start flag, end flag and CRC, then extracts the values
-                        lastStatus = smlDecodeFrame(uartbuf, len + tail, dataset);
-                        TRACE("[decode=%d]\n", (int)lastStatus);
-                        result = (lastStatus == SML_FRAME_OK && dataset.hasData());
-                    }
-                }
-
+                result = handlePattern();
                 break;
-                
+
             case UART_FIFO_OVF:
             case UART_BUFFER_FULL:
+                // data was lost, we are out of sync: forget everything and wait for the next start flag
                 uart_flush_input(uart_num);
                 xQueueReset(queue_uart);
+                startTaken = false;
                 break;
 
-            default: ;
-                //Serial.println(event.type, HEX);
+            default:; // data events, nothing to do
             }
         }
         return result;
-    };
+    }
 
-    void DEBUG_SML_FILE(sml_file *file)
+private:
+    uart_port_t uart_num;
+    QueueHandle_t queue_uart;
+    uint8_t uartbuf[BUF_SIZE + 8]; // frame up to the end pattern + end flag, padding count and CRC
+    bool startTaken = false;       // a start flag was read from the line already and is in uartbuf[0..7]
+
+    // One pattern (4 x 0x1B) was found. Returns 1 if this completed a valid frame.
+    char handlePattern()
     {
-        sml_file_print(file);
+        int pos = uart_pattern_pop_pos(uart_num); // bytes in front of the pattern, -1 if none
+        TRACE("[ev pos=%d startTaken=%d]", pos, startTaken);
 
-        // read here some values ...
-        printf("OBIS data\n");
-        for (int i = 0; i < file->messages_len; i++)
+        if (pos == 0)
         {
-            sml_message *message = file->messages[i];
-            if (*message->message_body->tag == SML_MESSAGE_GET_LIST_RESPONSE)
-            {
-                sml_list *entry;
-                sml_get_list_response *body;
-                body = (sml_get_list_response *)message->message_body->data;
-                for (entry = body->val_list; entry != NULL; entry = entry->next)
-                {
-                    if (!entry->value)
-                    { // do not crash on null value
-                        fprintf(stderr, "Error in data stream. entry->value should not be NULL. Skipping this.\n");
-                        continue;
-                    }
-                    if (entry->value->type == SML_TYPE_OCTET_STRING)
-                    {
-                        char *str;
-                        printf("%d-%d:%d.%d.%d*%d#%s#\n",
-                               entry->obj_name->str[0], entry->obj_name->str[1],
-                               entry->obj_name->str[2], entry->obj_name->str[3],
-                               entry->obj_name->str[4], entry->obj_name->str[5],
-                               sml_value_to_strhex(entry->value, &str, true));
-                        free(str);
-                    }
-                    else if (entry->value->type == SML_TYPE_BOOLEAN)
-                    {
-                        printf("%d-%d:%d.%d.%d*%d#%s#\n",
-                               entry->obj_name->str[0], entry->obj_name->str[1],
-                               entry->obj_name->str[2], entry->obj_name->str[3],
-                               entry->obj_name->str[4], entry->obj_name->str[5],
-                               entry->value->data.boolean ? "true" : "false");
-                    }
-                    else if (((entry->value->type & SML_TYPE_FIELD) == SML_TYPE_INTEGER) ||
-                             ((entry->value->type & SML_TYPE_FIELD) == SML_TYPE_UNSIGNED))
-                    {
-                        double value = sml_value_to_double(entry->value);
-                        int scaler = (entry->scaler) ? *entry->scaler : 0;
-                        int prec = -scaler;
-                        if (prec < 0)
-                            prec = 0;
-                        value = value * pow(10, scaler);
-                        printf("%d-%d:%d.%d.%d*%d#%.*f#",
-                               entry->obj_name->str[0], entry->obj_name->str[1],
-                               entry->obj_name->str[2], entry->obj_name->str[3],
-                               entry->obj_name->str[4], entry->obj_name->str[5], prec, value);
-                        const char *unit = NULL;
-                        if (entry->unit && // do not crash on null (unit is optional)
-                            (unit = dlms_get_unit((unsigned char)*entry->unit)) != NULL)
-                            printf("%s", unit);
-                        printf("\n");
-                        // flush the stdout puffer, that pipes work without waiting
-                        fflush(stdout);
-                    }
-                }
-            }
+            // Start flag at the head of the buffer, the frame is coming. A start flag we took from the line
+            // earlier (startTaken) is outdated now, this one wins.
+            startTaken = false;
+            return 0;
         }
-    };
+        if (pos < 0)
+            return 0;
 
-};     // end of class PowerMeter
+        // The pattern is at pos > 0: normally the end flag of a frame whose start flag is still in the buffer.
+        // But it can also be the start flag of the next frame, if there was junk or a fragment in front of it
+        // (noise, a frame cut off, power up in the middle of a frame). That is detected below and the start flag
+        // is kept for the next event.
+        size_t off = startTaken ? 8 : 0; // start flag already in uartbuf[0..7]
+        startTaken = false;
+        if (pos > BUF_SIZE - (int)off)
+        {
+            // can not be a valid frame, drop everything and wait for the next start flag
+            uart_flush_input(uart_num);
+            return 0;
+        }
+
+        int n = uart_read_bytes(uart_num, uartbuf + off, pos, READ_TIMEOUT_MS / portTICK_RATE_MS);
+        size_t len = off + (n > 0 ? n : 0);
+        TRACE("[read len=%d]", (int)len);
+
+        // 8 bytes more: end flag, padding count and CRC - or the start flag, see above
+        int tail = uart_read_bytes(uart_num, &uartbuf[len], 8, READ_TIMEOUT_MS / portTICK_RATE_MS);
+        TRACE("[tail=%d first=%02x%02x]", tail, uartbuf[len], uartbuf[len + 1]);
+        if (tail != 8)
+            return 0; // incomplete, wait for the next frame
+
+        static const uint8_t startFlag[8] = {0x1b, 0x1b, 0x1b, 0x1b, 0x01, 0x01, 0x01, 0x01};
+        if (memcmp(&uartbuf[len], startFlag, 8) == 0)
+        {
+            // what we read before was junk: forget it, the frame body follows
+            memcpy(uartbuf, startFlag, 8);
+            startTaken = true;
+            return 0;
+        }
+
+        // checks start flag, end flag and CRC, then extracts the values
+        lastStatus = smlDecodeFrame(uartbuf, len + tail, dataset);
+        TRACE("[decode=%d]\n", (int)lastStatus);
+        return lastStatus == SML_FRAME_OK && dataset.hasData();
+    }
+};
 
 #endif

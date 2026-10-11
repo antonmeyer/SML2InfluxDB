@@ -1,5 +1,5 @@
 #ifndef IOTCONF
-#define IOTCON
+#define IOTCONF
 /**
  * IotWebConf15MultipleWifi.ino -- IotWebConf is an ESP8266/ESP32
  *   non blocking WiFi/AP web configuration library for Arduino.
@@ -36,10 +36,8 @@
 #include "mycredentials.h"
 
 // -- Initial name of the Thing. Used e.g. as SSID of the own Access Point.
+// Only the default: the name saved with the config portal wins and is kept over firmware updates.
 const char thingName[] = "esp32VH";
-// ACHTUNG könnte live derzeit "eMonVH" sein vermutlich aber nicht
-//bei einem remote update könnte das zum Problem werden, weil das WLAN neu initialisiert werden muss
-// kann man schlecht testen
 
 #define STRING_LEN 128
 #define NUMBER_LEN 32
@@ -85,8 +83,6 @@ void IoTconf_init()
   iotWebConf.setStatusPin(STATUS_PIN, HIGH); // DoIT board light at high
   iotWebConf.setConfigPin(CONFIG_PIN);
 
-//ToDo iotWebConf.setWifiConnectionFailedHandler ();
-
   // -- Initializing the configuration.
   multipleWifiAddition.init();
   // -- Note: multipleWifiAddition.init() calls setFormValidator, that
@@ -127,27 +123,6 @@ void handleRoot()
   s += iotWebConf.getThingName();
   s += ".</div>";
 
-/*
-  ActionGroup* group = &actionGroup1;
-  while(group != nullptr)
-  {
-    if (group->isActive())
-    {
-      s += "<div>Action:</div>";
-      s += "<ul>";
-      s += "<li>Action type: ";
-      s += group->actionTypeValue;
-      s += "<li>MQTT topic: ";
-      s += group->mqttTopicValue;
-      s += "<li>MQTT message pattern: ";
-      s += group->mqttMsgPatternValue;
-      s += "<li>Delay (secs): ";
-      s += atoi(group->delaySecsValue);
-      s += "</ul>";
-    }
-    group = (ActionGroup*)group->getNext();
-  }
-*/
 
   s += "Go to <a href='config'>configure page</a> to change values.";
   s += "</body></html>\n";
@@ -163,14 +138,6 @@ bool formValidator(iotwebconf::WebRequestWrapper* webRequestWrapper)
   // we have override this setup.
   bool valid = multipleWifiAddition.formValidator(webRequestWrapper);
 
-/*
-  int l = webRequestWrapper->arg(stringParam.getId()).length();
-  if (l < 3)
-  {
-    stringParam.errorMessage = "Please provide at least 3 characters for this test!";
-    valid = false;
-  }
-*/
   return valid;
 }
 
