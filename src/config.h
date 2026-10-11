@@ -72,4 +72,11 @@
 #endif
 #define OTA_FIRST_CHECK_MS 60000UL
 
+// The server also offers an older version than the one on the device (it installs what is set on the server).
+// By default we only install a version that is newer than the running one, so a firmware flashed by USB is not
+// overwritten by an older one. 1: install whatever the server offers (rollback by server).
+#ifndef OTA_ALLOW_DOWNGRADE
+#define OTA_ALLOW_DOWNGRADE 0
+#endif
+
 #endif

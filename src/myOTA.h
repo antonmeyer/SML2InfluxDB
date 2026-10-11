@@ -1,11 +1,13 @@
 #ifndef MYOTA_H
 #define MYOTA_H
 
+#include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <esp_task_wdt.h>
 #include <WiFiClientSecure.h>
 #include "config.h"        // Version, OTA_CHECK_INTERVAL_MS
 #include "mycredentials.h" // OTAKEY
+#include "otaversion.h"
 
 #define MakeFirmwareInfo(k, v) "&_FirmwareInfo&k=" k "&v=" v "&FirmwareInfo_&"
 
@@ -44,6 +46,23 @@ String getChipId()
   return ChipIdHex;
 }
 
+// Asks the server which version it would send, without loading the firmware: the answer of an update has the
+// header "X-Version" and the connection is closed right after the headers. Returns the HTTP code, version is
+// empty unless the code is 200 (update available).
+static int otaServerVersion(WiFiClientSecure &client, const String &url, String &version)
+{
+  static const char *keys[] = {"X-Version"};
+  HTTPClient http;
+  http.collectHeaders(keys, 1);
+  http.setUserAgent("ESP32-http-Update");
+  http.addHeader("x-ESP32-version", Version);
+  http.begin(client, url);
+  int code = http.GET();
+  version = (code == HTTP_CODE_OK) ? http.header("X-Version") : "";
+  http.end(); // no body is read, the download is a second request by httpUpdate
+  return code;
+}
+
 // Call from loop(), returns immediately if it is not time yet. A successful update reboots the device.
 void checkUpdate()
 {
@@ -63,10 +82,28 @@ void checkUpdate()
   // a TLS handshake needs ~40 KB and two contiguous 16 KB blocks, so the largest free block is the number to watch
   Serial.printf("OTA check, free heap %u, largest block %u\n", ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
-  t_httpUpdate_return result;
+  t_httpUpdate_return result = HTTP_UPDATE_NO_UPDATES;
   {
     WiFiClientSecure client; // lives only for this check, the TLS memory is released at the end of the scope
     client.setCACert(otadrv_ca);
+
+    // first look which version the server has, see OTA_ALLOW_DOWNGRADE in config.h
+    String serverVersion;
+    int code = otaServerVersion(client, url, serverVersion);
+    if (code != HTTP_CODE_OK)
+    {
+      Serial.printf("OTA: server answers %d, no update\n", code); // 304: same version, 404/401: see OTAdrive
+      return;
+    }
+#if !OTA_ALLOW_DOWNGRADE
+    if (!versionNewer(serverVersion.c_str(), Version))
+    {
+      Serial.printf("OTA: server offers %s, running %s: not newer, skipped\n",
+                    serverVersion.length() ? serverVersion.c_str() : "(no version)", Version);
+      return;
+    }
+#endif
+    Serial.printf("OTA: installing %s (running %s)\n", serverVersion.c_str(), Version);
     httpUpdate.onProgress([](int, int) { esp_task_wdt_reset(); }); // the download can take longer than the watchdog
     result = httpUpdate.update(client, url, Version);
   }
