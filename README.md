@@ -29,6 +29,8 @@ Settings (pins, intervals, names) are in `src/config.h`, most of them can be set
 
 For the real operation set `INFLUX_DRY_RUN=0` and the measurement of the real data in `platformio.ini`.
 
+Other board: see [BOARDS.md](BOARDS.md) (environment, pins, partitions, checks).
+
 ## Tests
 
 ```
