@@ -96,6 +96,15 @@ void IoTconf_init()
   iotWebConf.setHtmlFormatProvider(&optionalGroupHtmlFormatProvider);
   iotWebConf.init();
 
+#if TEST_BOARD
+  // Test board: WiFi and AP password come from mycredentials.h, whatever is stored from the config portal.
+  // So no captive portal gymnastics are needed after flashing. Do NOT use this for the real device.
+  strlcpy(iotWebConf.getWifiSsidParameter()->valueBuffer, ssid, IOTWEBCONF_WORD_LEN);
+  strlcpy(iotWebConf.getWifiPasswordParameter()->valueBuffer, password, IOTWEBCONF_PASSWORD_LEN);
+  strlcpy(iotWebConf.getApPasswordParameter()->valueBuffer, wifiInitialApPassword, IOTWEBCONF_PASSWORD_LEN);
+  iotWebConf.skipApStartup(); // connect right away, do not wait in AP mode (a connected client would keep it there)
+#endif
+
   // -- Set up required URL handlers on the web server.
   server.on("/", handleRoot);
   server.on("/config", []{ iotWebConf.handleConfig(); });

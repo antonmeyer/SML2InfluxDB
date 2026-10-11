@@ -1,11 +1,17 @@
+Regression tests of the SML decoder (src/MeterData.h)
 
-This directory is intended for PlatformIO Unit Testing and project tests.
+  pio test -e native
 
-Unit Testing is a software testing method by which individual units of
-source code, sets of one or more MCU program modules together with associated
-control data, usage procedures, and operating procedures, are tested to
-determine whether they are fit for use. Unit testing finds problems early
-in the development cycle.
+Runs on the host (no ESP32 needed). Uses libSML and Unity.
 
-More information about PlatformIO Unit Testing:
-- https://docs.platformio.org/page/plus/unit-testing.html
+test_decoder/test_main.cpp   the tests
+test_decoder/sml_vectors.h   a few frames per meter, GENERATED - do not edit
+tools/make_vectors.py        cuts the frames out of the raw captures below
+
+*.hex                        raw captures (stream of SML frames, hex text or binary), e.g. recorded on the raspi.
+                             They contain no wall clock time; the only time is the meter's sensor time inside each frame.
+
+Add a new meter / capture:
+  1. put the capture in test/
+  2. add it to VECTORS in tools/make_vectors.py (name, file, frame numbers), run  python3 test/tools/make_vectors.py
+  3. add the expected values to test_decoder/test_main.cpp
