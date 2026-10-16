@@ -22,6 +22,16 @@
 static PowerMeter pm1(METER1_UART, METER1_RX_PIN);
 static PowerMeter pm2(METER2_UART, METER2_RX_PIN);
 
+// one aggregator per meter: reduces the frames to the points we write, see SampleAggregator.h
+static SampleAggregator agg1(SEND_INTERVAL_S, SEND_HEARTBEAT_S);
+static SampleAggregator agg2(SEND_INTERVAL_S, SEND_HEARTBEAT_S);
+
+// A decoded frame of a meter goes to the aggregator, and a point that comes out of it to the database.
+static void handleFrame(const MeterDataSet &ds, SampleAggregator &agg) {
+  SamplePoint p;
+  if (agg.add(ds, (uint32_t)time(nullptr), p)) send2InfluxDb(ds.getalias(), p);
+}
+
 // number of offline restarts since power up: RTC memory survives a software reset, the magic marks it valid
 #define RTC_MAGIC 0xC0FFEE01u
 RTC_NOINIT_ATTR static uint32_t rtcMagic;
@@ -103,14 +113,39 @@ void loop() {
                   ESP.getMaxAllocHeap(), offlineRestarts);
   }
 
-  // The meters: a frame is a few hundred bytes every second. Without network the values are dropped.
-  PowerMeter *meters[] = {&pm2, &pm1};
-  for (PowerMeter *pm : meters) {
-    if (pm->handle_event()) {
-      pm->dataset.print();
-      if (influxReady) send2InfluxDb(pm->dataset);
-    }
+  // The meters: a frame is a few hundred bytes every second. Without network (no time stamps) the values are dropped.
+  if (pm2.handle_event()) {
+    pm2.dataset.print();
+    if (influxReady) handleFrame(pm2.dataset, agg2);
   }
+  if (pm1.handle_event()) {
+    pm1.dataset.print();
+    if (influxReady) handleFrame(pm1.dataset, agg1);
+  }
+
+#if DEBUG_FEED_SAMPLE
+  // Test of the InfluxDB path without a meter: a made-up meter delivers a frame per second, like the real ones.
+  // Power swings between 100 and 500 W, the counter counts up with it (0.1 Wh steps).
+  static unsigned long lastFake = 0;
+  static MeterDataSet fake;
+  static uint32_t fakeT = 1000;
+  static double fakeWh = 1000.0;
+  if (influxReady && millis() - lastFake >= 1000) {
+    lastFake = millis();
+    double w = 300 + 200 * sin(fakeT / 7.0);
+    fakeWh += w / 3600.0;
+    fake.clearValues();
+    strcpy(fake.meterid, "FAKE0000");
+    fake.alias = "FAKE";
+    fake.actW = w;
+    fake.hasActW = true;
+    fake.sumWh = floor(fakeWh * 10) / 10; // the counter has 0.1 Wh
+    fake.hasSumWh = true;
+    fake.sensorTime = fakeT++;
+    fake.hasSensorTime = true;
+    handleFrame(fake, agg1);
+  }
+#endif
 
   static unsigned long lastStatus = 0;
   if (influxReady && (millis() - lastStatus) > STATUS_INTERVAL_MS) {

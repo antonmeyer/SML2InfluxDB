@@ -33,6 +33,7 @@
 
 #include <IotWebConf.h>
 #include <IotWebConfMultipleWifi.h>
+#include "config.h"
 #include "mycredentials.h"
 
 // -- Initial name of the Thing. Used e.g. as SSID of the own Access Point.
@@ -45,9 +46,8 @@ const char thingName[] = "esp32VH";
 // -- Configuration specific key. The value should be modified if config structure was changed.
 #define CONFIG_VERSION "opt6"
 
-// -- When CONFIG_PIN is pulled to ground on startup, the Thing will use the initial
-//      password to buld an AP. (E.g. in case of lost password)
-#define CONFIG_PIN GPIO_NUM_33
+// -- CONFIG_PIN (config.h): when pulled to ground on startup, the Thing will use the initial
+//      password to build an AP. (E.g. in case of lost password)
 
 // -- Status indicator pin.
 //      First it will light up (kept LOW), on Wifi connection it will blink,

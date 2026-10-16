@@ -9,12 +9,22 @@
 // UART and RX pin of the optical reader per meter (GPIO16 is the default RX of UART2).
 // The alias is the name of the meter in the database if its serial number is not in the lookup table of
 // MeterData.h.
+// The pins can be set with a build flag for other boards, see BOARDS.md.
 #define METER1_UART UART_NUM_1
+#ifndef METER1_RX_PIN
 #define METER1_RX_PIN GPIO_NUM_32
+#endif
 #define METER1_ALIAS "VHWP" // Vorderhaus Waermepumpe
 #define METER2_UART UART_NUM_2
+#ifndef METER2_RX_PIN
 #define METER2_RX_PIN GPIO_NUM_16
+#endif
 #define METER2_ALIAS "VHHS" // Vorderhaus Haushalt
+
+// When this pin is pulled to ground at startup the config portal uses the initial AP password (lost password).
+#ifndef CONFIG_PIN
+#define CONFIG_PIN GPIO_NUM_33
+#endif
 
 // ---- InfluxDB -----------------------------------------------------------------------------------------------
 #define INFLUXDB_BUCKET "testbkt1221"
@@ -38,9 +48,32 @@
 #endif
 
 // Write buffer of the InfluxDB library: points are sent in batches, or at the latest after the flush interval.
-#define INFLUX_BATCH_SIZE 10
+// A flush is an HTTPS request that blocks loop() for a moment, so not too small. At most this much data is lost
+// if the device restarts.
+#define INFLUX_BATCH_SIZE 20
 #define INFLUX_BUFFER_SIZE 20 // batches, the oldest points are dropped when it is full
-#define INFLUX_FLUSH_INTERVAL_S 300
+#define INFLUX_FLUSH_INTERVAL_S 60
+
+// The meters send a frame every 1..2 s, that is too much for the database (see SampleAggregator.h):
+//   power (W):  mean, min and max per window of SEND_INTERVAL_S seconds
+//   energy (Wh): when it changed, at most every SEND_INTERVAL_S, at least every SEND_HEARTBEAT_S seconds
+// SEND_INTERVAL_S 0: every frame is a point, no reduction.
+#ifndef SEND_INTERVAL_S
+#define SEND_INTERVAL_S 5
+#endif
+#ifndef SEND_HEARTBEAT_S
+#define SEND_HEARTBEAT_S 30
+#endif
+
+// ---- network time ---------------------------------------------------------------------------------------------
+// The clock is set via NTP (UDP port 123) after WLAN is up. Without it nothing is written and OTA does not run (time
+// stamps, and the certificate check needs it). In a network that blocks NTP use the router or a local server.
+#ifndef NTP_SERVER1
+#define NTP_SERVER1 "pool.ntp.org"
+#endif
+#ifndef NTP_SERVER2
+#define NTP_SERVER2 "time.nis.gov"
+#endif
 
 // ---- timing -------------------------------------------------------------------------------------------------
 // loop() must run at least this often, else the task watchdog resets the device (reset reason 6 in the status
@@ -61,7 +94,7 @@
 // Firmware version, as uploaded to OTAdrive. OTAdrive installs whatever version is set on the server when it is
 // different from the one the device reports (also an older one).
 #ifndef Version // can be overridden at build time: -DVersion=\"1.2.1.0\"
-#define Version "1.2.0.0"
+#define Version "1.3.0.0"
 #endif
 
 // How often to ask OTAdrive. The server blocks devices that ask too often (quota), so keep this low.

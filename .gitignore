@@ -19,3 +19,5 @@ firmware_*.bin
 .DS_Store
 
 __pycache__/
+
+*.zip

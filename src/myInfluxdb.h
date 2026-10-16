@@ -9,7 +9,7 @@
 
 #include <InfluxDbClient.h>
 #include <InfluxDbCloud.h>
-#include "MeterData.h" // the dataset structure
+#include "SampleAggregator.h" // the points to send
 
 // InfluxDB client instance with preconfigured InfluxCloud certificate
 static InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
@@ -45,10 +45,10 @@ static void influxWrite(Point &p)
 bool influxdb_init()
 {
     // time sync, needed for the timestamps of the points (waits max. 20 s)
-    timeSync(TZ_INFO, "pool.ntp.org", "time.nis.gov");
+    timeSync(TZ_INFO, NTP_SERVER1, NTP_SERVER2);
     if (time(nullptr) < 1000000000L)
     {
-        Serial.println("time not set, will retry");
+        Serial.println("time not set (NTP blocked? see NTP_SERVER1 in config.h), will retry");
         return false;
     }
 
@@ -78,27 +78,27 @@ bool influxdb_init()
     return true;
 }
 
-void send2InfluxDb(const MeterDataSet &dataset)
+// One point of a meter: alias is the tag "eMeter". The time stamp comes from the aggregator (clock of the meter), not
+// from the moment of sending. A field that is not in the point is not written, a missing value must not show up as 0.
+void send2InfluxDb(const char *alias, const SamplePoint &p)
 {
-    // only send what the meter delivered, a missing value must not show up as 0
-    if (!dataset.hasData())
-        return;
-
-    eMP1.setTime(WritePrecision::S); //set the current time
-    eMP1.addTag("eMeter", dataset.getalias());
-    if (dataset.hasActW)
-        eMP1.addField("actW", dataset.actW);
-    if (dataset.hasSumWh)
-        eMP1.addField("sumWh", dataset.sumWh);
-    if (dataset.hasExpWh)
-        eMP1.addField("expWh", dataset.expWh);
-    if (dataset.hasSensorTime)
-        eMP1.addField("sensorTime", (long)dataset.sensorTime);
+    eMP1.setTime((unsigned long long)p.epoch); // seconds, as the write precision
+    eMP1.addTag("eMeter", alias);
+    if (p.hasW)
+    {
+        eMP1.addField("actW", p.wMean, 1); // mean of the window, so old dashboards go on
+        eMP1.addField("actWmin", p.wMin, 1);
+        eMP1.addField("actWmax", p.wMax, 1);
+    }
+    if (p.hasSumWh)
+        eMP1.addField("sumWh", p.sumWh, 1);
+    if (p.hasExpWh)
+        eMP1.addField("expWh", p.expWh, 1);
 
     influxWrite(eMP1);
 
-    eMP1.clearFields(); //will change for sure
-    eMP1.clearTags();   //might change
+    eMP1.clearFields(); // also deletes the time stamp
+    eMP1.clearTags();
 }
 
 void sendESP32_to_Influxdb(uint32_t offlineRestarts)

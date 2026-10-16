@@ -28,14 +28,19 @@
 // handle_event() reads them. Hand them over every 8 bytes instead.
 #define UART_RX_FIFO_THRESHOLD 8
 
-// Pattern detection: 4 x 0x1B. The values are the ones of the deprecated API uart_enable_pattern_det_intr(), which
-// works with the meters since 2021. The unit of the three numbers (APB cycles or baud clocks) was not verified, so
-// they were left as they are.
+// Pattern detection: 4 x 0x1B, directly one after the other (no pause before, between and after the pattern).
 #define PATTERN_CHAR 0x1B
 #define PATTERN_CHAR_NUM 4
+// ESP32: uart_enable_pattern_det_intr() (only exists there), the unit is the APB clock of 80 MHz: 10000 cycles are
+// 125 us, 10 cycles are nothing. This works with the meters since 2021.
 #define PATTERN_CHR_TIMEOUT 10000
 #define PATTERN_POST_IDLE 10
 #define PATTERN_PRE_IDLE 10
+// other chips (S3, ...): uart_enable_pattern_det_baud_intr(), the unit is the bit time of the baud rate. At most 3
+// bit times between the characters, no idle time demanded before and after.
+#define PATTERN_BAUD_CHR_TIMEOUT 3
+#define PATTERN_BAUD_POST_IDLE 0
+#define PATTERN_BAUD_PRE_IDLE 0
 
 // Wait for the rest of a frame; it follows without a pause, the UART hands the bytes over every 8 bytes.
 #define READ_TIMEOUT_MS 50
@@ -67,8 +72,13 @@ public:
         uart_set_pin(uart_num, UART_PIN_NO_CHANGE, rx_pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         uart_driver_install(uart_num, UART_RX_RING_SIZE, 0, UART_EVENT_QUEUE_LEN, &queue_uart, 0);
         uart_set_rx_full_threshold(uart_num, UART_RX_FIFO_THRESHOLD);
+#if CONFIG_IDF_TARGET_ESP32
         uart_enable_pattern_det_intr(uart_num, PATTERN_CHAR, PATTERN_CHAR_NUM, PATTERN_CHR_TIMEOUT, PATTERN_POST_IDLE,
                                      PATTERN_PRE_IDLE);
+#else
+        uart_enable_pattern_det_baud_intr(uart_num, PATTERN_CHAR, PATTERN_CHAR_NUM, PATTERN_BAUD_CHR_TIMEOUT,
+                                          PATTERN_BAUD_POST_IDLE, PATTERN_BAUD_PRE_IDLE);
+#endif
         uart_pattern_queue_reset(uart_num, UART_PATTERN_QUEUE_LEN);
     }
 

@@ -68,3 +68,41 @@ Die GPIO 34 bis 39 sind nur Eingänge, für den RX-Pin aber geeignet.
 4. Erst danach `INFLUX_DRY_RUN=0` setzen.
 
 Beschreibung der Build-Flags und Tests: `README.md` und `test/README`.
+
+## Beispiel: ESP32-S3 N16R8 (16 MB Flash, 8 MB PSRAM)
+
+Getestet mit dem Entwicklungsboard mit zwei USB-Anschlüssen, Konsole über den **nativen USB-Port**.
+
+- **Umgebungen:** `esp32-s3-n16r8` (Firmware) und `selftest-s3` (UART-Selbsttest) in `platformio.ini`.
+- **Boardeinstellungen:** `board = esp32-s3-devkitc-1`, `board_upload.flash_size = 16MB`,
+  `board_build.arduino.memory_type = qio_opi` (Quad-Flash, Octal-PSRAM), `board_build.partitions = default_16MB.csv`,
+  `-DARDUINO_USB_CDC_ON_BOOT=1` für die Konsole über USB.
+- **Pins:** GPIO 26 bis 37 gehören bei der N16R8-Variante dem Flash und dem Octal-PSRAM, 19/20 dem USB. Verwendet werden
+  RX Zähler 1 = GPIO4, RX Zähler 2 = GPIO5, Konfig-Pin = GPIO7 (per Build-Flag `-DMETER1_RX_PIN=GPIO_NUM_4` usw., siehe
+  `config.h`).
+- **UART-Pattern:** Die Funktion `uart_enable_pattern_det_intr` gibt es nur beim klassischen ESP32. `PowerMeter.h`
+  nimmt bei anderen Chips `uart_enable_pattern_det_baud_intr` (Zeiten in Bit statt in APB-Takten). Der Selbsttest
+  besteht auf dem S3 (142 von 142 Frames, alle Fehlerfälle erholt).
+- **OTA:** Ein S3 darf kein Image aus dem OTAdrive-Produkt des ESP32 holen. In der Umgebung ist OTA deshalb abgeschaltet
+  (`-DOTA_CHECK_INTERVAL_MS=0`), bis ein eigenes Produkt existiert.
+- **Flashen:** `pio run -e esp32-s3-n16r8 -t upload`. Der Port ist ein `usbmodem`-Gerät. Verbindet esptool nicht, BOOT
+  halten und EN drücken.
+
+## WLAN ohne Konfigurationsportal (nur Testboards)
+
+Mit `-DTEST_BOARD=1` nimmt die Firmware WLAN-Name und Passwort aus `src/mycredentials.h` (`ssid`, `password`) und
+überspringt das Portal. Beispiel:
+
+```
+PLATFORMIO_BUILD_FLAGS='-DTEST_BOARD=1 -DDEBUG_FEED_SAMPLE=1' pio run -e esp32-s3-n16r8 -t upload
+```
+
+`DEBUG_FEED_SAMPLE=1` speist einen erfundenen Zähler ein, so sieht man den Influx-Pfad ohne angeschlossenen Zähler
+(Zeilen `Dry run, not writing: ePower_test,eMeter=FAKE ...`). Beide Flags nie für das echte Gerät verwenden.
+
+## Netzwerkzeit (NTP)
+
+Die Uhr wird über NTP gesetzt (UDP-Port 123, Server `NTP_SERVER1`/`NTP_SERVER2` in `config.h`). Ohne gültige Zeit
+laufen weder Datenbank noch OTA, auch nicht im Dry-Run. Sperrt das WLAN NTP, meldet die Konsole
+`time not set (NTP blocked? ...)`. Dann einen lokalen Server eintragen, z. B. den Router (`-DNTP_SERVER1=\"fritz.box\"`).
+
