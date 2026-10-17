@@ -1,0 +1,42 @@
+// ===== common part (inserted by grafana/tools, see grafana/README.md) ======================================
+// One stream for all meters: the new schema (measurement ePower: fields actW, actWmin, actWmax, sumWh, expWh,
+// tag eMeter) and the old schema of vzlogger (measurement ePowerWP: tag meter WPGH / HSGH, tag mptype totalEnergy /
+// actPower, field value) mapped to it: WPGH -> eMeter GHWP, HSGH -> GHHS, totalEnergy -> sumWh, actPower -> actW.
+//
+// The aggregation (agg) is done right behind the filter, so InfluxDB does it in the storage and only the small
+// result is merged. Do not put anything between the filter and agg. Variables: bucket, eMeter (regex)
+import "timezone"
+import "date"
+
+// Do NOT set "option location": with a time zone InfluxDB 2.x does max/min/first/last per window no longer in the
+// storage (22 s instead of 0.3 s for 30 days). The windows of this part are UTC; for days and months pass the
+// time zone to the second aggregation: aggregateWindow(..., location: tz). Hourly UTC windows fit local midnight.
+tz = timezone.location(name: "Europe/Berlin")
+
+// agg: a function (tables=<-) => tables |> aggregateWindow(...) or last() or first() ...
+// result: columns _time, _value, _field, eMeter; one table per eMeter and field, sorted by time
+src = (start, field, agg) => {
+    // the old schema has only the energy and the power; for every other field oldType matches nothing
+    oldType = if field == "sumWh" then "totalEnergy" else if field == "actW" then "actPower" else "none"
+    newData =
+        from(bucket: "${bucket}")
+            |> range(start: start, stop: v.timeRangeStop)
+            |> filter(fn: (r) => r._measurement == "ePower" and r._field == field and r.eMeter =~ /^${eMeter:regex}$/)
+            |> agg()
+            |> keep(columns: ["_time", "_value", "_field", "eMeter"])
+    oldData =
+        from(bucket: "${bucket}")
+            |> range(start: start, stop: v.timeRangeStop)
+            |> filter(fn: (r) => r._measurement == "ePowerWP" and r.mptype == oldType)
+            |> agg()
+            |> map(fn: (r) => ({r with eMeter: if r.meter == "WPGH" then "GHWP" else "GHHS", _field: field}))
+            |> filter(fn: (r) => r.eMeter =~ /^${eMeter:regex}$/)
+            |> keep(columns: ["_time", "_value", "_field", "eMeter"])
+
+    return
+        union(tables: [newData, oldData])
+            |> group(columns: ["eMeter", "_field"])
+            |> sort(columns: ["_time"])
+}
+// ===== end of the common part =============================================================================
+

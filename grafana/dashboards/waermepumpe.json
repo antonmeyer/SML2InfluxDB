@@ -1,0 +1,596 @@
+{
+  "uid": "waermepumpe",
+  "title": "Wärmepumpe GH / VH",
+  "description": "Läufe, Laufzeit und Energie der Wärmepumpen. Ein Lauf ist ein Zeitfenster, in dem die mittlere Leistung über der Schwelle liegt. Die Leistung wird aus dem Zählerstand berechnet, so funktioniert es auch ohne Leistungswert vom Zähler.",
+  "tags": [
+    "neu",
+    "waermepumpe"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "ds",
+        "label": "Datenquelle",
+        "type": "datasource",
+        "query": "influxdb",
+        "regex": "/InfluxDB_proxmox/",
+        "current": {
+          "selected": true,
+          "text": "InfluxDB_proxmox",
+          "value": "5YkhJsqMz"
+        },
+        "hide": 2,
+        "options": []
+      },
+      {
+        "name": "bucket",
+        "label": "Haus",
+        "type": "custom",
+        "query": "GH : bktRP4GH, VH : cloudbktcp",
+        "current": {
+          "selected": true,
+          "text": "GH",
+          "value": "bktRP4GH"
+        },
+        "options": [
+          {
+            "text": "GH",
+            "value": "bktRP4GH",
+            "selected": true
+          },
+          {
+            "text": "VH",
+            "value": "cloudbktcp",
+            "selected": false
+          }
+        ],
+        "multi": false,
+        "includeAll": false
+      },
+      {
+        "name": "eMeter",
+        "label": "Wärmepumpe",
+        "type": "query",
+        "datasource": {
+          "type": "influxdb",
+          "uid": "${ds}"
+        },
+        "query": "import \"influxdata/influxdb/schema\"\nnew = schema.tagValues(bucket: \"${bucket}\", tag: \"eMeter\", start: -400d)\nold = schema.tagValues(bucket: \"${bucket}\", tag: \"meter\", start: -400d)\n    |> map(fn: (r) => ({r with _value: if r._value == \"WPGH\" then \"GHWP\" else if r._value == \"HSGH\" then \"GHHS\" else r._value}))\nunion(tables: [new, old])\n    |> group()\n    |> distinct()\n",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "sort": 1,
+        "regex": "/WP$/"
+      },
+      {
+        "name": "period",
+        "label": "Energie je",
+        "type": "custom",
+        "query": "Tag : 1d, Monat : 1mo",
+        "current": {
+          "selected": true,
+          "text": "Tag",
+          "value": "1d"
+        },
+        "options": [
+          {
+            "text": "Tag",
+            "value": "1d",
+            "selected": true
+          },
+          {
+            "text": "Monat",
+            "value": "1mo",
+            "selected": false
+          }
+        ]
+      },
+      {
+        "name": "onW",
+        "label": "Schwelle (W)",
+        "type": "textbox",
+        "query": "1000",
+        "current": {
+          "text": "1000",
+          "value": "1000"
+        },
+        "options": [
+          {
+            "text": "1000",
+            "value": "1000",
+            "selected": true
+          }
+        ]
+      },
+      {
+        "name": "maxDayWh",
+        "type": "constant",
+        "query": "480000",
+        "hide": 2,
+        "current": {
+          "text": "480000",
+          "value": "480000"
+        },
+        "options": [
+          {
+            "text": "480000",
+            "value": "480000",
+            "selected": true
+          }
+        ]
+      },
+      {
+        "name": "maxPowerW",
+        "type": "constant",
+        "query": "25000",
+        "hide": 2,
+        "current": {
+          "text": "25000",
+          "value": "25000"
+        },
+        "options": [
+          {
+            "text": "25000",
+            "value": "25000",
+            "selected": true
+          }
+        ]
+      },
+      {
+        "name": "nowWindow",
+        "type": "constant",
+        "query": "10m",
+        "hide": 2,
+        "current": {
+          "text": "10m",
+          "value": "10m"
+        },
+        "options": [
+          {
+            "text": "10m",
+            "value": "10m",
+            "selected": true
+          }
+        ]
+      },
+      {
+        "name": "runWindow",
+        "type": "constant",
+        "query": "1m",
+        "hide": 2,
+        "current": {
+          "text": "1m",
+          "value": "1m"
+        },
+        "options": [
+          {
+            "text": "1m",
+            "value": "1m",
+            "selected": true
+          }
+        ]
+      },
+      {
+        "name": "runMinutes",
+        "type": "constant",
+        "query": "1",
+        "hide": 2,
+        "current": {
+          "text": "1",
+          "value": "1"
+        },
+        "options": [
+          {
+            "text": "1",
+            "value": "1",
+            "selected": true
+          }
+        ]
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Jetzt",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Aktuelle Leistung",
+      "description": "",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${ds}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${ds}"
+          },
+          "query": "// Current power (W): the mean power of the last minutes. Measured (actW) where the meter sends it, else calculated\n// from the energy counter (first and last reading of the window). Variables: bucket, eMeter, nowWindow (e.g. 10m)\n// ===== common part (inserted by grafana/tools, see grafana/README.md) ======================================\n// One stream for all meters: the new schema (measurement ePower: fields actW, actWmin, actWmax, sumWh, expWh,\n// tag eMeter) and the old schema of vzlogger (measurement ePowerWP: tag meter WPGH / HSGH, tag mptype totalEnergy /\n// actPower, field value) mapped to it: WPGH -> eMeter GHWP, HSGH -> GHHS, totalEnergy -> sumWh, actPower -> actW.\n//\n// The aggregation (agg) is done right behind the filter, so InfluxDB does it in the storage and only the small\n// result is merged. Do not put anything between the filter and agg. Variables: bucket, eMeter (regex)\nimport \"timezone\"\nimport \"date\"\n\n// Do NOT set \"option location\": with a time zone InfluxDB 2.x does max/min/first/last per window no longer in the\n// storage (22 s instead of 0.3 s for 30 days). The windows of this part are UTC; for days and months pass the\n// time zone to the second aggregation: aggregateWindow(..., location: tz). Hourly UTC windows fit local midnight.\ntz = timezone.location(name: \"Europe/Berlin\")\n\n// agg: a function (tables=<-) => tables |> aggregateWindow(...) or last() or first() ...\n// result: columns _time, _value, _field, eMeter; one table per eMeter and field, sorted by time\nsrc = (start, field, agg) => {\n    // the old schema has only the energy and the power; for every other field oldType matches nothing\n    oldType = if field == \"sumWh\" then \"totalEnergy\" else if field == \"actW\" then \"actPower\" else \"none\"\n    newData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePower\" and r._field == field and r.eMeter =~ /^${eMeter:regex}$/)\n            |> agg()\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n    oldData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePowerWP\" and r.mptype == oldType)\n            |> agg()\n            |> map(fn: (r) => ({r with eMeter: if r.meter == \"WPGH\" then \"GHWP\" else \"GHHS\", _field: field}))\n            |> filter(fn: (r) => r.eMeter =~ /^${eMeter:regex}$/)\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n\n    return\n        union(tables: [newData, oldData])\n            |> group(columns: [\"eMeter\", \"_field\"])\n            |> sort(columns: [\"_time\"])\n}\n// ===== end of the common part =============================================================================\n\n\nfrom_ = date.sub(d: ${nowWindow}, from: v.timeRangeStop)\nmeasured =\n    src(start: from_, field: \"actW\", agg: (tables=<-) => tables |> mean())\n        |> map(fn: (r) => ({r with _time: v.timeRangeStop}))\nfirst_ = src(start: from_, field: \"sumWh\", agg: (tables=<-) => tables |> first())\nlast_ = src(start: from_, field: \"sumWh\", agg: (tables=<-) => tables |> last())\ncalc =\n    join(tables: {a: first_, b: last_}, on: [\"eMeter\"])\n        |> map(fn: (r) => ({eMeter: r.eMeter, _field: \"actW_calc\", _time: v.timeRangeStop,\n            _value: if int(v: r._time_b) > int(v: r._time_a) and r._value_b >= r._value_a\n                then (r._value_b - r._value_a) * 3600.0 / (float(v: int(v: r._time_b) - int(v: r._time_a)) / 1000000000.0)\n                else 0.0}))\n        |> group(columns: [\"eMeter\", \"_field\"])\nunion(tables: [measured, calc])\n"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Energie im Zeitraum",
+      "description": "",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${ds}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${ds}"
+          },
+          "query": "// Energy (Wh) in the selected time range, per meter (jumps of meter changes are not counted).\n// Variables: bucket, eMeter, maxDayWh (see energy_per_period.flux)\n// ===== common part (inserted by grafana/tools, see grafana/README.md) ======================================\n// One stream for all meters: the new schema (measurement ePower: fields actW, actWmin, actWmax, sumWh, expWh,\n// tag eMeter) and the old schema of vzlogger (measurement ePowerWP: tag meter WPGH / HSGH, tag mptype totalEnergy /\n// actPower, field value) mapped to it: WPGH -> eMeter GHWP, HSGH -> GHHS, totalEnergy -> sumWh, actPower -> actW.\n//\n// The aggregation (agg) is done right behind the filter, so InfluxDB does it in the storage and only the small\n// result is merged. Do not put anything between the filter and agg. Variables: bucket, eMeter (regex)\nimport \"timezone\"\nimport \"date\"\n\n// Do NOT set \"option location\": with a time zone InfluxDB 2.x does max/min/first/last per window no longer in the\n// storage (22 s instead of 0.3 s for 30 days). The windows of this part are UTC; for days and months pass the\n// time zone to the second aggregation: aggregateWindow(..., location: tz). Hourly UTC windows fit local midnight.\ntz = timezone.location(name: \"Europe/Berlin\")\n\n// agg: a function (tables=<-) => tables |> aggregateWindow(...) or last() or first() ...\n// result: columns _time, _value, _field, eMeter; one table per eMeter and field, sorted by time\nsrc = (start, field, agg) => {\n    // the old schema has only the energy and the power; for every other field oldType matches nothing\n    oldType = if field == \"sumWh\" then \"totalEnergy\" else if field == \"actW\" then \"actPower\" else \"none\"\n    newData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePower\" and r._field == field and r.eMeter =~ /^${eMeter:regex}$/)\n            |> agg()\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n    oldData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePowerWP\" and r.mptype == oldType)\n            |> agg()\n            |> map(fn: (r) => ({r with eMeter: if r.meter == \"WPGH\" then \"GHWP\" else \"GHHS\", _field: field}))\n            |> filter(fn: (r) => r.eMeter =~ /^${eMeter:regex}$/)\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n\n    return\n        union(tables: [newData, oldData])\n            |> group(columns: [\"eMeter\", \"_field\"])\n            |> sort(columns: [\"_time\"])\n}\n// ===== end of the common part =============================================================================\n\n\nsrc(start: date.sub(d: 2d, from: v.timeRangeStart), field: \"sumWh\", agg: (tables=<-) => tables |> aggregateWindow(every: 1h, fn: max, createEmpty: false))\n    |> aggregateWindow(every: 1d, fn: last, createEmpty: false, location: tz, timeSrc: \"_start\")\n    |> difference()\n    |> filter(fn: (r) => r._value >= 0.0 and r._value <= float(v: ${maxDayWh}))\n    |> filter(fn: (r) => r._time >= v.timeRangeStart)\n    |> group(columns: [\"eMeter\"])\n    |> sum()\n"
+        }
+      ],
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "orientation": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Außentemperatur (Tagesmittel, DWD)",
+      "description": "",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${ds}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${ds}"
+          },
+          "query": "// Outdoor temperature (degrees C), daily mean of the DWD station. Fixed bucket dwdbkt.\nimport \"timezone\"\n\nfrom(bucket: \"dwdbkt\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"weather\" and r.dataset == \"temperature_air\" and r._field == \"temperature_air_mean_2m\")\n    |> aggregateWindow(every: 1d, fn: mean, createEmpty: false, location: timezone.location(name: \"Europe/Berlin\"), timeSrc: \"_start\")\n    // the raw values are Kelvin in older data and degrees C in newer data\n    |> map(fn: (r) => ({r with _value: if r._value > 150.0 then r._value - 273.15 else r._value, _field: \"Aussentemperatur\"}))\n"
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 12,
+        "h": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "row",
+      "title": "Läufe",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Laufzeit je Tag",
+      "description": "Stunden pro Tag, in denen die mittlere Leistung (1-Minuten-Fenster) über der Schwelle (Variable 'Schwelle') liegt.",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${ds}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${ds}"
+          },
+          "query": "// Hours per day the heat pump runs (mean power of a window above onW). Variables: bucket, eMeter, runWindow, runMinutes\n// (runWindow in minutes as a number), onW, maxPowerW\n// ===== common part (inserted by grafana/tools, see grafana/README.md) ======================================\n// One stream for all meters: the new schema (measurement ePower: fields actW, actWmin, actWmax, sumWh, expWh,\n// tag eMeter) and the old schema of vzlogger (measurement ePowerWP: tag meter WPGH / HSGH, tag mptype totalEnergy /\n// actPower, field value) mapped to it: WPGH -> eMeter GHWP, HSGH -> GHHS, totalEnergy -> sumWh, actPower -> actW.\n//\n// The aggregation (agg) is done right behind the filter, so InfluxDB does it in the storage and only the small\n// result is merged. Do not put anything between the filter and agg. Variables: bucket, eMeter (regex)\nimport \"timezone\"\nimport \"date\"\n\n// Do NOT set \"option location\": with a time zone InfluxDB 2.x does max/min/first/last per window no longer in the\n// storage (22 s instead of 0.3 s for 30 days). The windows of this part are UTC; for days and months pass the\n// time zone to the second aggregation: aggregateWindow(..., location: tz). Hourly UTC windows fit local midnight.\ntz = timezone.location(name: \"Europe/Berlin\")\n\n// agg: a function (tables=<-) => tables |> aggregateWindow(...) or last() or first() ...\n// result: columns _time, _value, _field, eMeter; one table per eMeter and field, sorted by time\nsrc = (start, field, agg) => {\n    // the old schema has only the energy and the power; for every other field oldType matches nothing\n    oldType = if field == \"sumWh\" then \"totalEnergy\" else if field == \"actW\" then \"actPower\" else \"none\"\n    newData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePower\" and r._field == field and r.eMeter =~ /^${eMeter:regex}$/)\n            |> agg()\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n    oldData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePowerWP\" and r.mptype == oldType)\n            |> agg()\n            |> map(fn: (r) => ({r with eMeter: if r.meter == \"WPGH\" then \"GHWP\" else \"GHHS\", _field: field}))\n            |> filter(fn: (r) => r.eMeter =~ /^${eMeter:regex}$/)\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n\n    return\n        union(tables: [newData, oldData])\n            |> group(columns: [\"eMeter\", \"_field\"])\n            |> sort(columns: [\"_time\"])\n}\n// ===== end of the common part =============================================================================\n\n\n// ===== heat pump state (inserted by grafana/tools) =========================================================\n// state: 1.0 in a window with more than onW watts (mean over the window, from the energy counter), else 0.0.\n// Variables: runWindow (e.g. 1m), onW (e.g. 1000), maxPowerW\nstate =\n    src(start: date.sub(d: ${runWindow}, from: v.timeRangeStart), field: \"sumWh\", agg: (tables=<-) => tables |> aggregateWindow(every: ${runWindow}, fn: max, createEmpty: false))\n        |> derivative(unit: 1h, nonNegative: false)\n        |> filter(fn: (r) => r._value >= 0.0 and r._value <= float(v: ${maxPowerW}))\n        |> filter(fn: (r) => r._time >= v.timeRangeStart)\n        |> map(fn: (r) => ({r with _value: if r._value > float(v: ${onW}) then 1.0 else 0.0}))\n// ===== end ================================================================================================\n\n\nstate\n    |> aggregateWindow(every: 1d, fn: sum, createEmpty: false, location: tz, timeSrc: \"_start\")\n    |> map(fn: (r) => ({r with _value: r._value * float(v: ${runMinutes}) / 60.0, _field: \"runtime_h\"}))\n"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Starts je Tag",
+      "description": "Anzahl der Wechsel von aus nach ein (1-Minuten-Fenster).",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${ds}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${ds}"
+          },
+          "query": "// Number of starts per day of the heat pump (change from off to on). Variables: as wp_runtime_per_day\n// ===== common part (inserted by grafana/tools, see grafana/README.md) ======================================\n// One stream for all meters: the new schema (measurement ePower: fields actW, actWmin, actWmax, sumWh, expWh,\n// tag eMeter) and the old schema of vzlogger (measurement ePowerWP: tag meter WPGH / HSGH, tag mptype totalEnergy /\n// actPower, field value) mapped to it: WPGH -> eMeter GHWP, HSGH -> GHHS, totalEnergy -> sumWh, actPower -> actW.\n//\n// The aggregation (agg) is done right behind the filter, so InfluxDB does it in the storage and only the small\n// result is merged. Do not put anything between the filter and agg. Variables: bucket, eMeter (regex)\nimport \"timezone\"\nimport \"date\"\n\n// Do NOT set \"option location\": with a time zone InfluxDB 2.x does max/min/first/last per window no longer in the\n// storage (22 s instead of 0.3 s for 30 days). The windows of this part are UTC; for days and months pass the\n// time zone to the second aggregation: aggregateWindow(..., location: tz). Hourly UTC windows fit local midnight.\ntz = timezone.location(name: \"Europe/Berlin\")\n\n// agg: a function (tables=<-) => tables |> aggregateWindow(...) or last() or first() ...\n// result: columns _time, _value, _field, eMeter; one table per eMeter and field, sorted by time\nsrc = (start, field, agg) => {\n    // the old schema has only the energy and the power; for every other field oldType matches nothing\n    oldType = if field == \"sumWh\" then \"totalEnergy\" else if field == \"actW\" then \"actPower\" else \"none\"\n    newData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePower\" and r._field == field and r.eMeter =~ /^${eMeter:regex}$/)\n            |> agg()\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n    oldData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePowerWP\" and r.mptype == oldType)\n            |> agg()\n            |> map(fn: (r) => ({r with eMeter: if r.meter == \"WPGH\" then \"GHWP\" else \"GHHS\", _field: field}))\n            |> filter(fn: (r) => r.eMeter =~ /^${eMeter:regex}$/)\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n\n    return\n        union(tables: [newData, oldData])\n            |> group(columns: [\"eMeter\", \"_field\"])\n            |> sort(columns: [\"_time\"])\n}\n// ===== end of the common part =============================================================================\n\n\n// ===== heat pump state (inserted by grafana/tools) =========================================================\n// state: 1.0 in a window with more than onW watts (mean over the window, from the energy counter), else 0.0.\n// Variables: runWindow (e.g. 1m), onW (e.g. 1000), maxPowerW\nstate =\n    src(start: date.sub(d: ${runWindow}, from: v.timeRangeStart), field: \"sumWh\", agg: (tables=<-) => tables |> aggregateWindow(every: ${runWindow}, fn: max, createEmpty: false))\n        |> derivative(unit: 1h, nonNegative: false)\n        |> filter(fn: (r) => r._value >= 0.0 and r._value <= float(v: ${maxPowerW}))\n        |> filter(fn: (r) => r._time >= v.timeRangeStart)\n        |> map(fn: (r) => ({r with _value: if r._value > float(v: ${onW}) then 1.0 else 0.0}))\n// ===== end ================================================================================================\n\n\nstate\n    |> difference()\n    |> filter(fn: (r) => r._value == 1.0)\n    |> aggregateWindow(every: 1d, fn: count, createEmpty: true, location: tz, timeSrc: \"_start\")\n    |> map(fn: (r) => ({r with _value: float(v: r._value), _field: \"starts\"}))\n"
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 7,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "Leistung und Energie",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Leistung (berechnet aus dem Zählerstand)",
+      "description": "",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${ds}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${ds}"
+          },
+          "query": "// Power (W) calculated from the energy counter, for meters that do not send the power (LGZ without PIN).\n// Variables: bucket, eMeter, maxPowerW (e.g. 25000). The window is the one Grafana chooses for the panel\n// (v.windowPeriod); set a minimum in the panel (Query options -> Min interval), e.g. 5m.\n//\n// The counter has a resolution of 0.1 Wh, so a window of 5 min is good for about +-1.2 W, 1 min for about +-6 W.\n// Negative steps and steps bigger than maxPowerW are meter changes or resets and left out.\n// ===== common part (inserted by grafana/tools, see grafana/README.md) ======================================\n// One stream for all meters: the new schema (measurement ePower: fields actW, actWmin, actWmax, sumWh, expWh,\n// tag eMeter) and the old schema of vzlogger (measurement ePowerWP: tag meter WPGH / HSGH, tag mptype totalEnergy /\n// actPower, field value) mapped to it: WPGH -> eMeter GHWP, HSGH -> GHHS, totalEnergy -> sumWh, actPower -> actW.\n//\n// The aggregation (agg) is done right behind the filter, so InfluxDB does it in the storage and only the small\n// result is merged. Do not put anything between the filter and agg. Variables: bucket, eMeter (regex)\nimport \"timezone\"\nimport \"date\"\n\n// Do NOT set \"option location\": with a time zone InfluxDB 2.x does max/min/first/last per window no longer in the\n// storage (22 s instead of 0.3 s for 30 days). The windows of this part are UTC; for days and months pass the\n// time zone to the second aggregation: aggregateWindow(..., location: tz). Hourly UTC windows fit local midnight.\ntz = timezone.location(name: \"Europe/Berlin\")\n\n// agg: a function (tables=<-) => tables |> aggregateWindow(...) or last() or first() ...\n// result: columns _time, _value, _field, eMeter; one table per eMeter and field, sorted by time\nsrc = (start, field, agg) => {\n    // the old schema has only the energy and the power; for every other field oldType matches nothing\n    oldType = if field == \"sumWh\" then \"totalEnergy\" else if field == \"actW\" then \"actPower\" else \"none\"\n    newData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePower\" and r._field == field and r.eMeter =~ /^${eMeter:regex}$/)\n            |> agg()\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n    oldData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePowerWP\" and r.mptype == oldType)\n            |> agg()\n            |> map(fn: (r) => ({r with eMeter: if r.meter == \"WPGH\" then \"GHWP\" else \"GHHS\", _field: field}))\n            |> filter(fn: (r) => r.eMeter =~ /^${eMeter:regex}$/)\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n\n    return\n        union(tables: [newData, oldData])\n            |> group(columns: [\"eMeter\", \"_field\"])\n            |> sort(columns: [\"_time\"])\n}\n// ===== end of the common part =============================================================================\n\n\nsrc(start: date.sub(d: v.windowPeriod, from: v.timeRangeStart), field: \"sumWh\", agg: (tables=<-) => tables |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false))\n    |> derivative(unit: 1h, nonNegative: false)\n    |> filter(fn: (r) => r._value >= 0.0 and r._value <= float(v: ${maxPowerW}))\n    |> filter(fn: (r) => r._time >= v.timeRangeStart)\n    |> map(fn: (r) => ({r with _field: \"actW_calc\"}))\n"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "interval": "5m"
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Energie je Tag / Monat",
+      "description": "",
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${ds}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${ds}"
+          },
+          "query": "// Energy (Wh) per day or per month from the counter. Variables: bucket, eMeter, period (1d or 1mo), maxDayWh\n//\n// Per day: last counter value of the day minus the one of the day before. A step that is negative or bigger than a\n// meter can deliver in a day (maxDayWh, e.g. 480000 = 20 kW for 24 h) is a meter change or a counter reset and not\n// counted. The month is the sum of the days. Time stamp = start of the day / month (local time).\n// ===== common part (inserted by grafana/tools, see grafana/README.md) ======================================\n// One stream for all meters: the new schema (measurement ePower: fields actW, actWmin, actWmax, sumWh, expWh,\n// tag eMeter) and the old schema of vzlogger (measurement ePowerWP: tag meter WPGH / HSGH, tag mptype totalEnergy /\n// actPower, field value) mapped to it: WPGH -> eMeter GHWP, HSGH -> GHHS, totalEnergy -> sumWh, actPower -> actW.\n//\n// The aggregation (agg) is done right behind the filter, so InfluxDB does it in the storage and only the small\n// result is merged. Do not put anything between the filter and agg. Variables: bucket, eMeter (regex)\nimport \"timezone\"\nimport \"date\"\n\n// Do NOT set \"option location\": with a time zone InfluxDB 2.x does max/min/first/last per window no longer in the\n// storage (22 s instead of 0.3 s for 30 days). The windows of this part are UTC; for days and months pass the\n// time zone to the second aggregation: aggregateWindow(..., location: tz). Hourly UTC windows fit local midnight.\ntz = timezone.location(name: \"Europe/Berlin\")\n\n// agg: a function (tables=<-) => tables |> aggregateWindow(...) or last() or first() ...\n// result: columns _time, _value, _field, eMeter; one table per eMeter and field, sorted by time\nsrc = (start, field, agg) => {\n    // the old schema has only the energy and the power; for every other field oldType matches nothing\n    oldType = if field == \"sumWh\" then \"totalEnergy\" else if field == \"actW\" then \"actPower\" else \"none\"\n    newData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePower\" and r._field == field and r.eMeter =~ /^${eMeter:regex}$/)\n            |> agg()\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n    oldData =\n        from(bucket: \"${bucket}\")\n            |> range(start: start, stop: v.timeRangeStop)\n            |> filter(fn: (r) => r._measurement == \"ePowerWP\" and r.mptype == oldType)\n            |> agg()\n            |> map(fn: (r) => ({r with eMeter: if r.meter == \"WPGH\" then \"GHWP\" else \"GHHS\", _field: field}))\n            |> filter(fn: (r) => r.eMeter =~ /^${eMeter:regex}$/)\n            |> keep(columns: [\"_time\", \"_value\", \"_field\", \"eMeter\"])\n\n    return\n        union(tables: [newData, oldData])\n            |> group(columns: [\"eMeter\", \"_field\"])\n            |> sort(columns: [\"_time\"])\n}\n// ===== end of the common part =============================================================================\n\n\nsrc(start: date.sub(d: 2d, from: v.timeRangeStart), field: \"sumWh\", agg: (tables=<-) => tables |> aggregateWindow(every: 1h, fn: max, createEmpty: false))\n    |> aggregateWindow(every: 1d, fn: last, createEmpty: false, location: tz, timeSrc: \"_start\")\n    |> difference()\n    |> filter(fn: (r) => r._value >= 0.0 and r._value <= float(v: ${maxDayWh}))\n    |> filter(fn: (r) => r._time >= v.timeRangeStart)\n    |> aggregateWindow(every: ${period}, fn: sum, createEmpty: false, location: tz, timeSrc: \"_start\")\n"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watth",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "links": []
+}

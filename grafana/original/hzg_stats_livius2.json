@@ -1,0 +1,3898 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "description": "shows results for the whole time since start of the capture until now",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "yellow",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 24,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "VHWP",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "GHWP"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.barAlignment",
+                "value": -1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gascnt"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Gas"
+              },
+              {
+                "id": "custom.barAlignment",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Temp"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Temperature  avg"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    0,
+                    10
+                  ],
+                  "fill": "dot"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "group": "A",
+                  "mode": "none"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 5
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 75,
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "f1 = if (\"${Option1}\" == \"Primary\") then 1.0\n          else  if (\"${Option1}\" == \"Costs\") then 0.00021\n          else 2.8\n\nfrom(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |> filter(fn: (r) => r[\"eMeter\"] == \"VHWP\")\n  |> aggregateWindow(every: 1d, fn: last, createEmpty: false)\n  |> map(fn: (r) => ({\n   r with\n    _value: float(v: r._value)* f1\n     }))\n  |> difference()\n  |> yield(name: \"VHWPsum\")\n",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "f1 = if (\"${Option1}\" == \"Primary\") then 1.0\n          else  if (\"${Option1}\" == \"Costs\") then 0.00021\n          else 2.8\n\nfrom(bucket: \"bktRP4GH\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"meter\"] == \"WPGH\")\n  |> filter(fn: (r) => r[\"mptype\"] == \"totalEnergy\")\n  |> aggregateWindow(every: 1d, fn: last, createEmpty: false)\n  |> map(fn: (r) => ({\n   r with\n    _value: float(v: r._value)*f1\n     }))\n  |> difference()\n  |> yield(name: \"GHWPsum\")",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "f2 = if (\"${Option1}\" == \"Primary\") then 108.0\n          else  if (\"${Option1}\" == \"Costs\") then 0.0044\n          else 108.0*0.9\n\nfrom(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Gas\")\n  |> filter(fn: (r) => r[\"_field\"] == \"gascnt\")\n  |> increase() //gascnt might restart at 0\n  |> aggregateWindow(every: 1d, fn: last, createEmpty: false)\n   \n|> map(fn: (r) => ({\n   r with\n    _value: float(v: r._value)*f2\n     }))\n  |> difference(nonNegative: true)\n  \n  |> yield(name: \"gas\")",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"dwdbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"weather\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"dataset\"] == \"temperature_air\")\n  |>drop (columns: [\"_start\",\"_stop\", \"quality\" ])\n  |> aggregateWindow(every: 1d, fn: mean, createEmpty: false)\n  |> rename(columns: {_value: \"Temp\"})\n  |> yield(name: \"Temp\")",
+          "refId": "D"
+        }
+      ],
+      "timeFrom": "now-30d/d",
+      "title": "Daily Power Consumption $Option1",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false,
+            "minWidth": 0
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sumGH"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "GH"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sumVH"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "VH"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "VH"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 76
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GH"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 77
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "id": 68,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "import \"contrib/tomhollingworth/events\"\nimport \"influxdata/influxdb/monitor\"\n\nfrom(bucket: \"LiviusStats\")\n|> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n   // |> range(start: -1d, stop: now())\n    //  |> range(start: 2022-04-13T23:29:39Z, stop: 2022-04-14T15:42:30Z)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"gasstat\")\n    // |> keep(columns: [\"_time\", \"_value\", \"_stop\", \"_measurement\"])\n    |> group()\n    |> sort(columns: [\"_time\"])\n    |> increase()\n    |> duplicate(column: \"_value\", as: \"gasrate\")\n    |> derivative(unit: 1s, columns: [\"gasrate\"])\n    |> duplicate(column: \"_value\", as: \"gascnt_delta\")\n    |> difference(columns: [\"gascnt_delta\"])\n    |> filter(fn: (r) => r.gascnt_delta > 1) //filter state changes\n    |> reduce(\n        fn: (r, accumulator) =>\n            ({\n                sumVH: ((float(v: r.gasrate < 0.1 and r.gasrate > 0.0795) + (float(v: r.gasrate > 0.1) /2.0))* float(v: r.gascnt_delta +1) *0.108)+ accumulator.sumVH,\n                sumGH: ((float(v: r.gasrate <= 0.0795) + (float(v: r.gasrate > 0.1) /2.0))* float(v: r.gascnt_delta +1)* 0.108) + accumulator.sumGH,\n            }),\n        identity: {sumVH: 0.0, sumGH: 0.0},\n    )",
+          "refId": "A"
+        }
+      ],
+      "title": "Gas",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "yellow",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "watth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 8
+      },
+      "id": 61,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n  |> filter(fn: (r) => r[\"eMeter\"] == \"VHWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  //|> increase()\n  //|> aggregateWindow(every: 5m, fn: last, offset: -1h)\n // |> duplicate(column: \"_stop\", as: \"_time\")\n  //|> max()\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> increase()\n  |> yield(name: \"increase\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Verbrauch WP VH in der Periode",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "watth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 5,
+        "y": 8
+      },
+      "id": 59,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"bktRP4GH\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"meter\"] == \"WPGH\")\n  |> filter(fn: (r) => r[\"mptype\"] == \"totalEnergy\")\n  //|> increase()\n  //|> aggregateWindow(every: 5m, fn: last, offset: -1h)\n // |> duplicate(column: \"_stop\", as: \"_time\")\n  //|> max()\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> increase()\n  |> yield(name: \"increase\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Verbrauch WP GH in der Periode",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 10,
+        "y": 8
+      },
+      "id": 63,
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "/^gascnt$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Gas\")\n  |> filter(fn: (r) => r[\"_field\"] == \"gascnt\")\n  |> increase()\n  |> aggregateWindow(every: v.windowPeriod, column: \"_field\", fn: last, createEmpty: false)\n \n |> map(fn: (r) => ({\n   r with\n    _value: float(v: r._value)*0.108\n     }))\n // |> yield(name: \"gas\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Gas",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "description": "shows results for the whole time since start of the capture until now",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "#EAB839",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Temp"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "displayName",
+                "value": "Temp"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "Temp",
+                  "ratio"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": true,
+                  "viz": true
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ratio"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green"
+                    },
+                    {
+                      "color": "#EAB839",
+                      "value": 50
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "line"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 19,
+        "x": 0,
+        "y": 12
+      },
+      "id": 70,
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "f1 = 2.8 // JAZ rough estimation\nVHWP =\n    from(bucket: \"cloudbktcp\")\n          |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n        |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n        |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n        |> filter(fn: (r) => r[\"eMeter\"] == \"VHWP\")\n        |> aggregateWindow(every: 1w, fn: last, createEmpty: false)\n      // |> map(fn: (r) => ({r with _value: float(v: r._value) * f1}))\n        |> difference()\n        |> keep(columns: [\"_time\", \"_value\"])\n        |> rename(columns: {_value: \"VHWPvalue\"})\n        |> yield(name: \"VHWPsum\")\n\nGHWP =\n    from(bucket: \"bktRP4GH\")\n        |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n        |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n        |> filter(fn: (r) => r[\"_field\"] == \"value\")\n        |> filter(fn: (r) => r[\"meter\"] == \"WPGH\")\n        |> filter(fn: (r) => r[\"mptype\"] == \"totalEnergy\")\n        |> aggregateWindow(every: 1w, fn: last, createEmpty: false)\n       // |> map(fn: (r) => ({r with _value: float(v: r._value) * f1}))\n        |> difference()\n        |> keep(columns: [\"_time\", \"_value\"])\n        |> yield(name: \"GHWPsum\")\n\nf2 = 105.0\nGas =\n    from(bucket: \"cloudbktcp\")\n        |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n        |> filter(fn: (r) => r[\"_measurement\"] == \"Gas\")\n        |> filter(fn: (r) => r[\"_field\"] == \"gascnt\")\n        |> increase()\n        |> aggregateWindow(every: 1w, fn: last, createEmpty: false)\n        \n        //ga scnt might restart at 0\n        |> map(fn: (r) => ({r with _value: float(v: r._value) * f2}))\n        |> difference(nonNegative: true)\n        |> keep(columns: [\"_time\", \"_value\"])\n        |> rename(columns: {_value: \"Gasvalue\"})\n        |> yield(name: \"gas\")\n\nWP = join(tables: {VHWP: VHWP, GHWP: GHWP}, on: [\"_time\"])\n|> map(fn: (r) => ({_time: r._time, WPsum: float(v: (r._value + r.VHWPvalue))}))\n//WP\njoin(tables: {WP: WP, Gas: Gas}, on: [\"_time\"])\n|> map(fn: (r) => ({_time: r._time, ratio: (r.WPsum *f1)/ ((r.WPsum*f1) + r.Gasvalue)} ))",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"dwdbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"weather\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"dataset\"] == \"temperature_air\")\n  |>drop (columns: [\"_start\",\"_stop\", \"quality\" ])\n  |> aggregateWindow(every: 1w, fn: mean, createEmpty: false)\n  |> rename(columns: {_value: \"Temp\"})\n  |> yield(name: \"Temp\")",
+          "refId": "D"
+        }
+      ],
+      "timeFrom": "now-52w/w",
+      "title": "Deckungsbeitrag Umweltwärme",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "yellow",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 24,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "VHWP",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "GHWP"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gascnt"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Gas"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Temp"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Temperature  avg"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    0,
+                    10
+                  ],
+                  "fill": "dot"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "group": "A",
+                  "mode": "none"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 4
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 19,
+        "x": 0,
+        "y": 23
+      },
+      "id": 66,
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "max",
+            "mean",
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "import \"timezone\"\nf1 = if (\"${Option1}\" == \"Primary\") then 1.0\n          else  if (\"${Option1}\" == \"Costs\") then 0.00021\n          else 2.8\nfrom(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |> filter(fn: (r) => r[\"eMeter\"] == \"VHWP\")\n  |> aggregateWindow(every: 1w, fn: last, createEmpty: false)\n  //|> aggregateWindow(every: 1d, fn: last, createEmpty: false, location: timezone.location(name: \"Europe/Berlin\"))\n  |> map(fn: (r) => ({\n   r with\n    _value: float(v: r._value)* f1\n     }))\n  |> difference()\n  |> yield(name: \"VHWPsum\")\n",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "f1 = if (\"${Option1}\" == \"Primary\") then 1.0\n          else  if (\"${Option1}\" == \"Costs\") then 0.00021\n          else 2.8\n\nfrom(bucket: \"bktRP4GH\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"meter\"] == \"WPGH\")\n  |> filter(fn: (r) => r[\"mptype\"] == \"totalEnergy\")\n  |> aggregateWindow(every: 1w, fn: last, createEmpty: false)\n  |> map(fn: (r) => ({\n   r with\n    _value: float(v: r._value)*f1\n     }))\n  |> difference()\n  |> yield(name: \"GHWPsum\")",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "f2 = if (\"${Option1}\" == \"Primary\") then 108.0\n          else  if (\"${Option1}\" == \"Costs\") then 0.0044\n          else 108.0*0.9\n\nfrom(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"Gas\")\n  |> filter(fn: (r) => r[\"_field\"] == \"gascnt\")\n  |> increase() //gascnt might restart at 0\n  |> aggregateWindow(every: 1w, fn: last, createEmpty: false)\n   \n|> map(fn: (r) => ({\n   r with\n    _value: float(v: r._value)*f2\n     }))\n  |> difference(nonNegative: true)\n  \n  |> yield(name: \"gas\")",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"dwdbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"weather\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"dataset\"] == \"temperature_air\")\n  |>drop (columns: [\"_start\",\"_stop\", \"quality\" ])\n  |> aggregateWindow(every: 1d, fn: mean, createEmpty: false)\n  \n  |> rename(columns: {_value: \"Temp\"})\n  |> yield(name: \"Temp\")",
+          "refId": "D"
+        }
+      ],
+      "timeFrom": "now-52w/w",
+      "title": "weekly Power Consumption $Option1",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "watth"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GHGas"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "GHGas"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "VHGas"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "VHGas"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 19,
+        "x": 0,
+        "y": 34
+      },
+      "id": 72,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "sum",
+            "mean",
+            "max",
+            "min"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "_time",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "import \"contrib/tomhollingworth/events\"\ngasrate_seperator = 0.076\ncntinWh = 108.0\n\ntable1 = from(bucket: \"LiviusStats\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n   // |> range(start: -7d, stop: -1d)\n    //  |> range(start: 2022-04-13T23:29:39Z, stop: 2022-04-14T15:42:30Z)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"gasstat\")\n    // |> keep(columns: [\"_time\", \"_value\", \"_stop\", \"_measurement\"])\n    |> group()\n    |> sort(columns: [\"_time\"])\n    |> duplicate(column: \"_value\", as: \"gasrate\")\n    |> derivative(unit: 1s, columns: [\"gasrate\"])\n    |> duplicate(column: \"_value\", as: \"gascnt_delta\")\n    |> difference(columns: [\"gascnt_delta\"])\n    |> filter(fn: (r) => r.gascnt_delta > 1)\n\n    |> map(fn: (r) => ({\n        r with\n            GHGas:  if (r.gasrate >gasrate_seperator) then ( float(v:(r.gascnt_delta + 1)) *cntinWh / 2.0)\n                    else if (r.gasrate <gasrate_seperator) and (r.gasrate > gasrate_seperator) then float(v:(r.gascnt_delta + 1)) *cntinWh\n                    else 0.0 ,\n            VHGas: if (r.gasrate > gasrate_seperator) then ( float(v:(r.gascnt_delta + 1)) *cntinWh / 2.0)\n                    else if (r.gasrate <= gasrate_seperator) then float(v:(r.gascnt_delta + 1)) *cntinWh\n                    else 0.0\n     }))\n     //|> elapsed\n\ntable1 \n|> aggregateWindow(column: \"GHGas\", every:1d, fn:sum)\n|> yield(name:\"GHGAS\")\ntable1 \n|> aggregateWindow(column: \"VHGas\", every:1d, fn:sum)\n|> yield(name:\"VHGAS\")\n",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": "now-30d/d",
+      "title": "Gas täglich",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "Hausstrom",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "watth"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GH HS"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "HSGHsum"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "VHHS SumWh"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "HSVHsum"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "VH HS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TGSumWh"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "TG"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 19,
+        "x": 0,
+        "y": 40
+      },
+      "id": 37,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "sum",
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"bktRP4GH\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"meter\"] == \"HSGH\")\n  |> filter(fn: (r) => r[\"mptype\"] == \"totalEnergy\")\n  |> aggregateWindow(every: 1d, fn: max, createEmpty: false)\n  |> difference()\n  |> rename(columns: {_value: \"GH HS\"})\n  |> yield(name: \"GHHSsum\")",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |> filter(fn: (r) => r[\"eMeter\"] == \"VHHS\")\n  |> aggregateWindow(every: 1d, fn: max, createEmpty: false)\n  |> difference()\n  |> rename(columns: {_value: \"VHHS SumWh\"})\n  |> yield(name: \"VHHSsum\")",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |> filter(fn: (r) => r[\"eMeter\"] == \"TG\")\n  |> aggregateWindow(every: 1d, fn: max, createEmpty: false)\n  |> difference()\n  |> rename(columns: {_value: \"TGSumWh\"})\n  |> yield(name: \"TGsum\")",
+          "refId": "C"
+        }
+      ],
+      "timeFrom": "now-30d/d",
+      "title": "Hausstrom täglich",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "Hausstrom",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "watth"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GH HS"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "HSGHsum"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "VHHS SumWh"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "HSVHsum"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "VH HS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TGSumWh"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "TG"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 19,
+        "x": 0,
+        "y": 46
+      },
+      "id": 74,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "sum",
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"bktRP4GH\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"meter\"] == \"HSGH\")\n  |> filter(fn: (r) => r[\"mptype\"] == \"totalEnergy\")\n  |> aggregateWindow(every: 1w, fn: max, createEmpty: false)\n  |> difference()\n  |> rename(columns: {_value: \"GH HS\"})\n  |> yield(name: \"GHHSsum\")",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |> filter(fn: (r) => r[\"eMeter\"] == \"VHHS\")\n  |> aggregateWindow(every: 1w, fn: max, createEmpty: false)\n  |> difference()\n  |> rename(columns: {_value: \"VHHS SumWh\"})\n  |> yield(name: \"VHHSsum\")",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |> filter(fn: (r) => r[\"eMeter\"] == \"TG\")\n  |> aggregateWindow(every: 1w, fn: max, createEmpty: false)\n  |> difference()\n  |> rename(columns: {_value: \"TGSumWh\"})\n  |> yield(name: \"TGsum\")",
+          "refId": "C"
+        }
+      ],
+      "timeFrom": "now-52w/w",
+      "title": "Hausstrom weekly",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {dataset=\"precipitation\", parameter=\"precipitation_height\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-purple",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "displayName",
+                "value": "Niederschlag"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 18
+              },
+              {
+                "id": "unit",
+                "value": "lengthmm"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {dataset=\"dew_point\", parameter=\"temperature_dew_point_mean_200\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Taupunkt"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {dataset=\"temperature_air\", parameter=\"temperature_air_mean_200\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Temperatur"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {dataset=\"wind\", parameter=\"wind_speed\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "displayName",
+                "value": "Wind"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 22,
+        "x": 0,
+        "y": 52
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"dwdbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"weather\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |>drop (columns: [\"_start\",\"_stop\", \"quality\" ])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  \n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "DWD Tempelhof Wetter",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 62
+      },
+      "id": 24,
+      "panels": [],
+      "title": "last 2 weeks",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {dataset=\"precipitation\", parameter=\"precipitation_height\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-purple",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "displayName",
+                "value": "Niederschlag"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 18
+              },
+              {
+                "id": "unit",
+                "value": "lengthmm"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {dataset=\"temperature_air\", parameter=\"temperature_air_mean_200\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Lufttemperatur in 2 m Höhe"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {dataset=\"dew_point\", parameter=\"temperature_dew_point_mean_200\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Taupunkt in °C"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {dataset=\"wind\", parameter=\"wind_speed\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "displayName",
+                "value": "Wind in Bft"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 17,
+        "x": 0,
+        "y": 63
+      },
+      "id": 22,
+      "interval": "1h",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"dwdbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"weather\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |>drop (columns: [\"_start\",\"_stop\", \"quality\" ])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": "now-30d/d",
+      "title": "Wetterdaten DWD Tempelhof",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "DfFsldc7k"
+      },
+      "description": "shows result for the actual Time Range",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "RunTime",
+            "axisPlacement": "auto",
+            "axisSoftMax": 1,
+            "axisSoftMin": 0,
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 9,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "min"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "min"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-red",
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-red"
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 30
+                    },
+                    {
+                      "color": "light-red",
+                      "value": 60
+                    },
+                    {
+                      "color": "super-light-red",
+                      "value": 120
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "mean"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "mean"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#e2bc0e78",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "max"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "max"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "count"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 9
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "count"
+              },
+              {
+                "id": "custom.scaleDistribution",
+                "value": {
+                  "type": "linear"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "sum"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "min"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 10,
+        "x": 0,
+        "y": 71
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "query": "import \"influxdata/influxdb/monitor\"\nelapsed_tbl = from(bucket: \"statbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  //next steps are just for safety, if there a multiple tables\n |> group()\n |> sort(columns: [\"_time\"])\n |> monitor.stateChangesOnly()\n |> group()\n |> sort(columns: [\"_time\"])\n|>elapsed()\n//we want only the time between 2 off = info\n|> filter (fn: (r) => r[\"_level\"] == \"info\")\n|> filter (fn: (r) => r[\"elapsed\"] < 14400)\n//|> keep (columns: [\"elapsed\", \"_time\"])\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\", fn: min)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"min\"})\n|> yield (name: \"min\")\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\", fn: mean)\n|> rename(columns: {elapsed: \"mean\"})\n|> yield (name: \"mean\")\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\", fn: max)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"max\"})\n|> yield (name: \"max\")\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\",fn: count)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"count\"})\n|> yield (name: \"count\")\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\", fn: sum)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"sum\"})\n|> yield (name: \"sum\")",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": "now-30d/d",
+      "title": "GHWP RunTime Stats",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "string",
+                "targetField": "le"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "description": "shows result for the actual Time Range",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "RunTime",
+            "axisPlacement": "auto",
+            "axisSoftMax": 1,
+            "axisSoftMin": 0,
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 9,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "min"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "min"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-red",
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "dark-red"
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 30
+                    },
+                    {
+                      "color": "light-red",
+                      "value": 60
+                    },
+                    {
+                      "color": "super-light-red",
+                      "value": 120
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "mean"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "mean"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "max"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "max"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "count"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 9
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "count"
+              },
+              {
+                "id": "custom.scaleDistribution",
+                "value": {
+                  "type": "linear"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sum"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "sum"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "min"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 9,
+        "x": 10,
+        "y": 71
+      },
+      "id": 43,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "elapsed_tbl = from(bucket: \"LiviusStats\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"vhwp_runs_from_total\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |>group()\n |> sort(columns: [\"_time\"])\n|> elapsed()\n|>difference() //filter out little glitches and maintanence effects\n|> filter (fn: (r) => r[\"_value\"] > 0)\n|> filter (fn: (r) => r[\"_level\"] == \"info\")\n|> sort(columns: [\"elapsed\"])\n|> filter (fn: (r) => r[\"elapsed\"] < 10000)\n//|> keep (columns: [\"elapsed\"])\n|> keep (columns: [\"elapsed\", \"_time\"])\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\", fn: min)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"min\"})\n|> yield (name: \"min\")\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\", fn: mean)\n|> rename(columns: {elapsed: \"mean\"})\n|> yield (name: \"mean\")\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\", fn: max)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"max\"})\n|> yield (name: \"max\")\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\",fn: count)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"count\"})\n|> yield (name: \"count\")\n\nelapsed_tbl\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\", fn: sum)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"sum\"})\n|> yield (name: \"sum\")",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": "now-30d/d",
+      "title": "VHWP RunTime Stats",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "string",
+                "targetField": "le"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "description": "shows results for the whole time since start of the capture until now",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "thresholds",
+            "seriesBy": "last"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "hour sum",
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "#EAB839",
+                "value": 50
+              },
+              {
+                "color": "light-red",
+                "value": 75
+              },
+              {
+                "color": "dark-red",
+                "value": 80.0001
+              }
+            ]
+          },
+          "unit": "watth"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hour sum"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "hour sum"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 11,
+        "x": 0,
+        "y": 78
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "mean",
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"bktRP4GH\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"meter\"] == \"WPGH\")\n  |> filter(fn: (r) => r[\"mptype\"] == \"totalEnergy\")\n  |> aggregateWindow(every: 1h, fn: last)\n  |> difference()\n  |> filter(fn: (r) => r[\"_value\"] < 20000)\n  |> yield(name: \"sum\")",
+          "refId": "A"
+        }
+      ],
+      "timeShift": "65m",
+      "title": "GH WP Power Consumption hourly",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "description": "shows results for the whole time since start of the capture until now",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "thresholds",
+            "seriesBy": "last"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "hour sum",
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "#EAB839",
+                "value": 50
+              },
+              {
+                "color": "light-red",
+                "value": 75
+              },
+              {
+                "color": "dark-red",
+                "value": 80.0001
+              }
+            ]
+          },
+          "unit": "watth"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hour sum"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 11,
+        "x": 11,
+        "y": 78
+      },
+      "id": 44,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "mean",
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"cloudbktcp\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePower\")\n  |> filter(fn: (r) => r[\"eMeter\"] == \"VHWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |> aggregateWindow(every: 1h, fn: last)\n  |> difference()\n  |> filter(fn: (r) => r[\"_value\"] < 20000)\n  |> yield(name: \"sum\")",
+          "refId": "A"
+        }
+      ],
+      "title": "VH WP Power Consumption hourly",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "description": "shows results for the whole time since start of the capture until now",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "thresholds",
+            "seriesBy": "last"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "hour sum",
+          "mappings": [],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "#EAB839",
+                "value": 50
+              },
+              {
+                "color": "light-red",
+                "value": 75
+              },
+              {
+                "color": "dark-red",
+                "value": 80.0001
+              }
+            ]
+          },
+          "unit": "watth"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hour sum"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "hour sum"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 11,
+        "x": 0,
+        "y": 84
+      },
+      "id": 76,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "mean",
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"bktRP4GH\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"meter\"] == \"WPGH\")\n  |> filter(fn: (r) => r[\"mptype\"] == \"totalEnergy\")\n  |> aggregateWindow(every: 1h, fn: last)\n  |> difference()\n  |> filter(fn: (r) => r[\"_value\"] < 20000)\n  |> yield(name: \"sum\")",
+          "refId": "A"
+        }
+      ],
+      "title": "GH WP Power Consumption hourly",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 90
+      },
+      "id": 10,
+      "panels": [],
+      "title": "Laufzeiten",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Mixed --"
+      },
+      "description": "shows result for the actual Time Range",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Häufigkeit",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "Display Name",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_value"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 9,
+        "x": 0,
+        "y": 91
+      },
+      "id": 6,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.66,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "DfFsldc7k"
+          },
+          "query": "import \"influxdata/influxdb/monitor\"\nfrom(bucket: \"statbkt\")\n  |> range(start: 2021-11-06T18:00:00Z, stop: now())\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  //next steps are just for safety, if there a multiple tables\n |> group()\n |> sort(columns: [\"_time\"])\n |> monitor.stateChangesOnly()\n |> group()\n |> sort(columns: [\"_time\"])\n|>elapsed()\n//we want only the time between 2 off = info\n|> filter (fn: (r) => r[\"_level\"] == \"info\")\n|> sort(columns: [\"elapsed\"])\n|> filter (fn: (r) => r[\"elapsed\"] < 21600)\n|> keep (columns: [\"elapsed\"])\n|> rename(columns: {elapsed: \"_value\"})\n|> toFloat()\n|> histogram(\n       bins:[0.0, 60.0, 120.0, 300.0, 600.0, 1200.0, 1800.0, 2400.0, 3600.0, 7200.0, 43000.0],\n       normalize: true\n   )\n|> difference()",
+          "refId": "A"
+        }
+      ],
+      "title": "GHWP Laufzeit in s Histogram overall",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "string",
+                "targetField": "le"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Mixed --"
+      },
+      "description": "shows result for the actual Time Range",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "Starts",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Starts"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 9,
+        "y": 91
+      },
+      "id": 41,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.66,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"LiviusStats\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"vhwp_runs_from_total\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |>group()\n |> sort(columns: [\"_time\"])\n|> elapsed()\n|>difference() // make it more robust against little spikes and maintance effects\n|> filter (fn: (r) => r[\"_value\"] > 0)\n|> filter (fn: (r) => r[\"_level\"] == \"info\")\n|> sort(columns: [\"elapsed\"])\n|> filter (fn: (r) => r[\"elapsed\"] < 21600)\n|> keep (columns: [\"elapsed\"])\n|> rename(columns: {elapsed: \"_value\"})\n|> toFloat()\n|> histogram(\n       bins:[0.0, 60.0, 120.0, 300.0, 600.0, 1200.0, 1800.0, 2400.0, 3600.0, 7200.0, float(v: \"+Inf\")]\n   )\n|> difference()\n",
+          "refId": "A"
+        }
+      ],
+      "title": "VHWP Laufzeit in s Histogram TimeRange",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "string",
+                "targetField": "le"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "DfFsldc7k"
+      },
+      "description": "shows result for the actual Time Range",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "semi-dark-blue",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "Starts",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 7,
+        "x": 17,
+        "y": 91
+      },
+      "id": 4,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.66,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {},
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "DfFsldc7k"
+          },
+          "query": "import \"influxdata/influxdb/monitor\"\nfrom(bucket: \"statbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  //next steps are just for safety, if there a multiple tables\n |> group()\n |> sort(columns: [\"_time\"])\n |> monitor.stateChangesOnly()\n |> group()\n |> sort(columns: [\"_time\"])\n|>elapsed()\n//we want only the time between 2 off = info\n|> filter (fn: (r) => r[\"_level\"] == \"info\")\n|> sort(columns: [\"elapsed\"])\n|> filter (fn: (r) => r[\"elapsed\"] < 21600)\n|> keep (columns: [\"elapsed\"])\n|> rename(columns: {elapsed: \"_value\"})\n|> toFloat()\n|> histogram(\n       bins:[0.0, 60.0, 120.0, 300.0, 600.0, 1200.0, 1800.0, 2400.0, 3600.0, 7200.0, float(v: \"+Inf\")]\n   )\n|> difference()",
+          "refId": "A"
+        }
+      ],
+      "title": "GH WP RunTime Histogram TimeRange",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "string",
+                "targetField": "le"
+              }
+            ],
+            "fields": {}
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Mixed --"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "weather value {dataset=\"temperature_air\", parameter=\"temperature_air_mean_200\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Lufttemperatur in 2 m Höhe"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "count"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    0,
+                    10
+                  ],
+                  "fill": "dot"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 5
+              },
+              {
+                "id": "displayName",
+                "value": "WP_GH Starts pro Tag"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "VHcount"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    0,
+                    10
+                  ],
+                  "fill": "dot"
+                }
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "displayName",
+                "value": "WP_VH Starts pro Tag"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "GHcount"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    0,
+                    10
+                  ],
+                  "fill": "dot"
+                }
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "displayName",
+                "value": "WP_GH Starts pro Tag"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 15,
+        "x": 0,
+        "y": 97
+      },
+      "id": 38,
+      "interval": "1h",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"dwdbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"weather\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"dataset\"] == \"temperature_air\")\n  |>drop (columns: [\"_start\",\"_stop\", \"quality\" ])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"LiviusStats\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"vhwp_runs_from_total\")\n  |> filter(fn: (r) => r[\"_field\"] == \"sumWh\")\n  |>group()\n |> sort(columns: [\"_time\"])\n|> elapsed()\n|>difference() // we make it more robust against little spikes or maintanence impacts\n|> filter (fn: (r) => r[\"_value\"] > 0)\n|> filter (fn: (r) => r[\"_level\"] == \"info\")\n|> sort(columns: [\"elapsed\"])\n|> filter (fn: (r) => r[\"elapsed\"] < 10000)\n//|> keep (columns: [\"elapsed\"])\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\",fn: count)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"VHcount\"})\n|> yield (name: \"VHcount\")",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "hide": false,
+          "query": "from(bucket: \"bktRP4GH\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"wpgh_runs_from_total\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n // |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n // |> yield(name: \"mean\")\n |>group()\n |> sort(columns: [\"_time\"])\n|> elapsed()\n|>difference() // we make it more robust against little spikes or maintanence impacts\n|> filter (fn: (r) => r[\"_value\"] > 0)\n|> filter (fn: (r) => r[\"_level\"] == \"info\")\n|> sort(columns: [\"elapsed\"])\n|> filter (fn: (r) => r[\"elapsed\"] < 10000)\n//|> keep (columns: [\"elapsed\"])\n|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\",fn: count)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"GHcount\"})\n|> yield (name: \"GHcount\")",
+          "refId": "D"
+        }
+      ],
+      "timeFrom": "now-60d/d",
+      "title": "Aussen-Temperatur und tägliche WP Starts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "5YkhJsqMz"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 9,
+        "x": 15,
+        "y": 97
+      },
+      "id": 73,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"b1d\")\n  |> range(start: -2d, stop: -1d)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"HSGHminW\")\n  |> aggregateWindow(every: 1d, fn: min, createEmpty: false)\n  |> yield(name: \"minmax\")",
+          "refId": "A"
+        }
+      ],
+      "title": "HSGH Licht an?",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Mixed --"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "dash": [
+                10,
+                10
+              ],
+              "fill": "dash"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "weather value {dataset=\"temperature_air\", parameter=\"temperature_air_mean_200\", station_id=\"00433\"}"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Lufttemperatur in 2 m Höhe"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "mean"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "none"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    0,
+                    10
+                  ],
+                  "fill": "dot"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 5
+              },
+              {
+                "id": "displayName",
+                "value": "durchschnittliche WP Laufzeit in s"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 15,
+        "x": 0,
+        "y": 106
+      },
+      "id": 55,
+      "interval": "1h",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "maxHeight": 600,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.0.1+security-01",
+      "targets": [
+        {
+          "datasource": {
+            "uid": "5YkhJsqMz"
+          },
+          "query": "from(bucket: \"dwdbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"weather\")\n  //|> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"dataset\"] == \"temperature_air\")\n  |>drop (columns: [\"_start\",\"_stop\", \"quality\" ])\n  |> aggregateWindow(every: 1d, fn: mean, createEmpty: false)\n \n  |> yield(name: \"mean\")",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "uid": "DfFsldc7k"
+          },
+          "hide": false,
+          "query": "import \"influxdata/influxdb/monitor\"\nelapsed_tbl = from(bucket: \"statbkt\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"ePowerWP\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  //next steps are just for safety, if there a multiple tables\n |> group()\n |> sort(columns: [\"_time\"])\n |> monitor.stateChangesOnly()\n |> group()\n |> sort(columns: [\"_time\"])\n|>elapsed()\n//we want only the time between 2 off = info\n|> filter (fn: (r) => r[\"_level\"] == \"info\")\n|> filter (fn: (r) => r[\"elapsed\"] < 14400)\n//|> keep (columns: [\"elapsed\", \"_time\"])\n\n\nelapsed_tbl\n//|> aggregateWindow(every: 1d, column: \"elapsed\", timeSrc: \"_start\",fn: mean)\n|> aggregateWindow(every: 1d, column: \"elapsed\",fn: mean)\n|> keep (columns: [\"elapsed\", \"_time\"])\n|> rename(columns: {elapsed: \"mean\"})\n|> yield (name: \"mean\")",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": "now-60d/d",
+      "title": "durchschnittliche Aussen-Temp und tägliche WP mean runtime",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "Primary",
+          "value": "Primary"
+        },
+        "includeAll": false,
+        "label": "Daily Heating Option",
+        "name": "Option1",
+        "options": [
+          {
+            "selected": false,
+            "text": "Costs",
+            "value": "Costs"
+          },
+          {
+            "selected": true,
+            "text": "Primary",
+            "value": "Primary"
+          },
+          {
+            "selected": false,
+            "text": "Heat",
+            "value": "Heat"
+          }
+        ],
+        "query": "Costs, Primary, Heat",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "HZG Stats Livius2",
+  "uid": "GI9Zk85nk",
+  "version": 485
+}

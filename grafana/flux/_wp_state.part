@@ -1,0 +1,11 @@
+// ===== heat pump state (inserted by grafana/tools) =========================================================
+// state: 1.0 in a window with more than onW watts (mean over the window, from the energy counter), else 0.0.
+// Variables: runWindow (e.g. 1m), onW (e.g. 1000), maxPowerW
+state =
+    src(start: date.sub(d: ${runWindow}, from: v.timeRangeStart), field: "sumWh", agg: (tables=<-) => tables |> aggregateWindow(every: ${runWindow}, fn: max, createEmpty: false))
+        |> derivative(unit: 1h, nonNegative: false)
+        |> filter(fn: (r) => r._value >= 0.0 and r._value <= float(v: ${maxPowerW}))
+        |> filter(fn: (r) => r._time >= v.timeRangeStart)
+        |> map(fn: (r) => ({r with _value: if r._value > float(v: ${onW}) then 1.0 else 0.0}))
+// ===== end ================================================================================================
+
