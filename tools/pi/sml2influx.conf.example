@@ -1,0 +1,12 @@
+# /etc/sml2influx.conf - copy, fill in, chmod 600 (contains the token)
+device = /dev/ttyWP
+influx_url = http://localhost:8086
+org = <organization of the InfluxDB>
+bucket = bktWP
+token = <write token for the bucket>
+measurement = ePower_test        # use a separate name first, so it can be deleted again
+alias = GHWP                     # eMeter tag if the serial number is not in the table of MeterData.h
+#extra_tags = meter=WPGH,metertype=Strom
+interval = 5                     # window in seconds, mean/min/max of the power
+heartbeat = 30                   # energy is written at the latest after this many seconds
+#dry_run = 1                     # print the lines instead of writing them

@@ -51,7 +51,10 @@ public:
         if (haveWindow_ && (strcmp(id_, ds.meterid) != 0 || t < lastT_ || t - lastT_ > MAX_GAP_S))
             reset();
         if (!haveWindow_)
+        {
             strncpy(id_, ds.meterid, sizeof(id_) - 1);
+            id_[sizeof(id_) - 1] = 0;
+        }
 
         updateOffset(ds.hasSensorTime ? (int64_t)nowEpoch - (int64_t)t : 0, t);
 

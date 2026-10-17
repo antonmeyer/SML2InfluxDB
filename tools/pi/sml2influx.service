@@ -1,0 +1,12 @@
+[Unit]
+Description=sml2influx: SML meter on a serial port to InfluxDB
+After=network.target influxdb.service
+
+[Service]
+User=pi
+ExecStart=/usr/local/bin/sml2influx -c /etc/sml2influx.conf
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

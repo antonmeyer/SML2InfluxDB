@@ -21,3 +21,6 @@ firmware_*.bin
 __pycache__/
 
 *.zip
+
+# built binary of the Raspberry Pi service
+tools/pi/sml2influx
